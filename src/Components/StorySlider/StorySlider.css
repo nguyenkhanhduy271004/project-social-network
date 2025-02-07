@@ -1,0 +1,32 @@
+/* Custom styling for the arrows and story spacing */
+
+.slick-prev,
+.slick-next {
+    background-color: black;
+    /* Black arrows */
+    border-radius: 50%;
+    z-index: 1;
+    opacity: 1;
+    color: white;
+}
+
+.slick-prev:before,
+.slick-next:before {
+    color: white;
+    /* Arrow icon color */
+}
+
+.slick-dots {
+    display: none;
+    /* Hide dots */
+}
+
+.story {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    /* Reduce gap between avatar and text */
+    padding: 0 10px;
+    /* Adjust horizontal padding */
+}
