@@ -1,18 +1,21 @@
 import { Avatar, Button } from '@mui/material';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Yup from 'yup';
 import ImageIcon from '@mui/icons-material/Image';
 import FmdGoodIcon from '@mui/icons-material/FmdGood';
 import TagFacesIcon from '@mui/icons-material/TagFaces';
 import PostCard from './PostCard';
 import StorySlider from '../StorySlider/StorySlider';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAllPosts } from '../../Store/Post/Action';
 
 const validationSchema = Yup.object({
     content: Yup.string().required("Tweet text is required"),
 });
 
 function HomeSection() {
+    const dispatch = useDispatch();
     const [uploadingImage, setUploadingImage] = useState(false);
     const [selectedImage, setSelectedImage] = useState("");
 
@@ -40,6 +43,12 @@ function HomeSection() {
         }
         setUploadingImage(false);
     };
+
+    useEffect(() => {
+        dispatch(getAllPosts());
+    }, [dispatch]);
+
+    const posts = useSelector((state) => state.post.posts);
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -123,9 +132,11 @@ function HomeSection() {
             </section>
 
             <section>
-                {[1, 1, 1, 1].map((item, index) => (
-                    <PostCard key={index} />
-                ))}
+                {posts && posts.length > 0 ? (
+                    posts.map((post) => <PostCard key={post.id} post={post} />)
+                ) : (
+                    <p className="text-gray-500">No posts available.</p>
+                )}
             </section>
         </div>
     );
