@@ -6,7 +6,7 @@ import { MoreHoriz } from '@mui/icons-material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
-function PostCard() {
+function PostCard({ post }) {
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState();
     const open = Boolean(anchorEl);
@@ -22,10 +22,6 @@ function PostCard() {
     }
     return (
         <div className=''>
-            {/* <div className='flex items-center font-semibold text-gray-700 py-2'>
-                <RepeatIcon />
-                <p>Your post</p>
-            </div> */}
 
             <div className='flex space-x-5'>
                 <Avatar
@@ -36,8 +32,8 @@ function PostCard() {
                 <div className='w-full'>
                     <div className='flex justify-between items-center'>
                         <div className='flex cursor-pointer items-center space-x-2'>
-                            <span className='font-semibold'>Code with Duy</span>
-                            <span className='text-gray-600'>@codewithDuy . 2m</span>
+                            <span className="font-semibold">{post?.user?.fullName}</span>
+                            <span className="text-gray-600">@{post?.user?.email} · 2m</span>
                             <img className='ml-2 w-5 h-5' src="https://cdn-icons-png.flaticon.com/512/6364/6364343.png" alt="content-image" />
                         </div>
                         <div>
@@ -73,21 +69,20 @@ function PostCard() {
                     </div>
                     <div className='mt-2'>
                         <div className='cursor-pointer text-left'>
-                            <p className='mb-2'>full stack project</p>
+                            <p className="mt-2">{post?.content}</p>
                             <img className='w-[28rem] border border-gray-400 p-5 rounded-md'
-                                src="https://www.freshbooks.com/wp-content/uploads/2022/02/statement-of-account.jpg"
-                                alt="post-image" />
+                                src={post?.image} alt="post-image" />
                         </div>
                         <div className='py-5 flex items-center justify-between text-gray-600'>
                             <div className='flex space-x-5'>
                                 <div className='flex items-center space-x-2 cursor-pointer hover:text-blue-500 transition'>
                                     <ChatBubbleOutlineIcon fontSize="small" />
-                                    <p className='text-sm'>43</p>
+                                    <p className='text-sm'>{post?.totalReplies}</p>
                                 </div>
 
                                 <div className='flex items-center space-x-2 cursor-pointer hover:text-red-500 transition'>
                                     <FavoriteBorderIcon fontSize="small" />
-                                    <p className='text-sm'>43</p>
+                                    <p className='text-sm'>{post?.totalLikes}</p>
                                 </div>
 
                                 <div className='flex items-center space-x-2 cursor-pointer hover:text-green-500 transition'>
