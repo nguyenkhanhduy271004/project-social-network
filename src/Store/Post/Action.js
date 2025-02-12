@@ -47,14 +47,24 @@ export const findPostsById = (postId) => async (dispatch) => {
 
 export const createPost = (postData) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/posts/create`, postData);
-        console.log("Get all posts", data);
+        const formData = new FormData();
+        formData.append("file", postData.file);
+        formData.append("content", postData.content);
+
+        const { data } = await api.post(`/api/posts/create`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
+            },
+        });
+
+        console.log("Create Post:", data);
         dispatch({ type: POST_CREATE_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
         dispatch({ type: POST_CREATE_FAILURE, payload: error.message });
     }
-}
+};
 
 
 export const createPostReply = (postData) => async (dispatch) => {
@@ -81,7 +91,7 @@ export const createRePost = (postId) => async (dispatch) => {
 
 export const likePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/${postId}/like`);
+        const { data } = await api.post(`/api/${postId}/likes`);
         console.log("Get all posts", data);
         dispatch({ type: LIKE_POST_SUCCESS, payload: data });
     } catch (error) {
@@ -92,7 +102,7 @@ export const likePost = (postId) => async (dispatch) => {
 
 export const deletePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/post/${postId}`);
+        const { data } = await api.delete(`/api/posts/${postId}`);
         console.log("Get all posts", data);
         dispatch({ type: POST_DELETE_SUCCESS, payload: postId });
     } catch (error) {

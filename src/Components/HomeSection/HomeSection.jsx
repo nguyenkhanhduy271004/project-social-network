@@ -8,7 +8,7 @@ import TagFacesIcon from '@mui/icons-material/TagFaces';
 import PostCard from './PostCard';
 import StorySlider from '../StorySlider/StorySlider';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllPosts } from '../../Store/Post/Action';
+import { createPost, findPostsByLikeContainUser, getAllPosts } from '../../Store/Post/Action';
 
 const validationSchema = Yup.object({
     content: Yup.string().required("Tweet text is required"),
@@ -16,11 +16,20 @@ const validationSchema = Yup.object({
 
 function HomeSection() {
     const dispatch = useDispatch();
+    const { auth } = useSelector(store => store);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [selectedImage, setSelectedImage] = useState("");
 
-    const handleSubmit = (values) => {
-        console.log("values: ", values);
+    const handleSubmit = async (values, { resetForm }) => {
+
+        const postData = {
+            content: values.content,
+            file: formik.values.image,
+        };
+
+        await dispatch(createPost(postData));
+        resetForm();
+        setSelectedImage("");
     };
 
     const formik = useFormik({
@@ -46,7 +55,8 @@ function HomeSection() {
 
     useEffect(() => {
         dispatch(getAllPosts());
-    }, [dispatch]);
+        dispatch(findPostsByLikeContainUser(auth.user?.id))
+    }, [dispatch, auth.posts]);
 
     const posts = useSelector((state) => state.post.posts);
 

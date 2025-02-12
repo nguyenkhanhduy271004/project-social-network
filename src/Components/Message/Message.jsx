@@ -1,11 +1,32 @@
 import { Avatar, Divider, Grid, IconButton } from '@mui/material'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import WestIcon from '@mui/icons-material/West';
 import CallIcon from '@mui/icons-material/Call';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import SearchUser from '../SearchUser/SearchUser';
+import SockJS from 'sockjs-client';
+import Stomp from 'stompjs';
+import { API_BASE_URL } from '../../config/api';
+
 function Message() {
+    const [stompClient, setStompClient] = useState(null);
+
+    useEffect(() => {
+        const sock = new SockJS(`${API_BASE_URL}/ws`);
+        const stomp = Stomp.over(sock);
+        setStompClient(stomp);
+
+        stomp.connect({}, onConnect, onErr);
+    }, [])
+
+    const onConnect = () => {
+        console.log("websocket connected...")
+    }
+
+    const onErr = (error) => {
+        console.log("error: ", error)
+    }
     const users = [
         { id: 1, name: 'Nguyễn Khánh Duy', avatar: 'https://cdn-icons-png.flaticon.com/512/8345/8345328.png' },
         { id: 2, name: 'Trần Minh Tú', avatar: 'https://cdn-icons-png.flaticon.com/512/8345/8345328.png' },
