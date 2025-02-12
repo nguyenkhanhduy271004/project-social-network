@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 function Authentication() {
 
-    const [isLogin, setIsLogin] = useState(false);
+    const [isLogin, setIsLogin] = useState();
     const dispatch = useDispatch();
     useEffect(() => {
         const path = window.location.pathname;

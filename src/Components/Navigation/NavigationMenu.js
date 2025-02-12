@@ -37,7 +37,7 @@ export const navigationMenu = [
     {
         title: 'Trang cá nhân',
         icon: <AccountCircleIcon />,
-        path: '/profile/:id'
+        path: '/account'
     },
     {
         title: 'Xem thêm',

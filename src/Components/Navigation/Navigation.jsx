@@ -36,7 +36,7 @@ function Navigation() {
                 </div>
                 <div className='space-y-6 mt-4'>
                     {navigationMenu.map((item) =>
-                        <div className='cursor-pointer flex space-x-3 items-center' onClick={() => item.title === "Trang cá nhân" ? navigate(`/profile/${id}`) : navigate(item.path)}>
+                        <div className='cursor-pointer flex space-x-3 items-center' onClick={() => navigate(item.path)}>
                             {item.icon}
                             <p className='text-xl'>{item.title}</p>
                         </div>
