@@ -7,15 +7,23 @@ import { MoreHoriz, Send } from '@mui/icons-material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { deletePost, likePost, commentOnPost, createPostReply } from '../../Store/Post/Action';
+import { deletePost, likePost, createPostReply, createRePost } from '../../Store/Post/Action';
 
 function PostCard({ post }) {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
+
     const likedPosts = useSelector(state => state.post.likedPosts);
-    const isLiked = likedPosts.some(likedPost => likedPost.id === post.id);
+    const currentUser = useSelector(state => state.auth.user);
+
+    const [isLiked, setIsLiked] = useState(likedPosts?.some(likedPost => likedPost.id === post.id));
+    const [totalLikes, setTotalLikes] = useState(post?.totalLikes || 0);
+    const [totalReplies, setTotalReplies] = useState(post?.totalReplies || 0);
+    const [totalComments, setTotalComments] = useState(post?.replyPosts?.length ?? 0);
+
     const [showComments, setShowComments] = useState(false);
     const [comment, setComment] = useState('');
 
@@ -34,18 +42,27 @@ function PostCard({ post }) {
 
     const handleLikePost = () => {
         dispatch(likePost(post?.id));
+        setIsLiked(!isLiked);
+        setTotalLikes(prevLikes => isLiked ? prevLikes - 1 : prevLikes + 1);
     };
 
     const handleCommentSubmit = () => {
         if (comment.trim()) {
-            dispatch(createPostReply());
+            const formData = new FormData();
+            formData.set("content", comment);
+            formData.set("postId", post?.id);
+            dispatch(createPostReply(formData));
             setComment('');
+            setTotalReplies(prevTotalReplies => prevTotalReplies + 1);
         }
     };
 
-    useEffect(() => {
+    const handleSharePost = () => {
+        dispatch(createRePost(post?.id));
+        setTotalReplies(prevTotalReplies => prevTotalReplies + 1);
+    };
 
-    }, [dispatch])
+    useEffect(() => { }, [dispatch, isLiked, totalReplies, showComments]);
 
     return (
         <div className="border p-4 rounded-lg shadow-md bg-white mb-4">
@@ -54,13 +71,15 @@ function PostCard({ post }) {
                     onClick={() => navigate(`/profile/${post?.user?._id}`)}
                     className="cursor-pointer"
                     alt={post?.user?.fullName}
-                    src={post?.user?.avatar || 'https://via.placeholder.com/150'}
+                    src={post?.user?.image || 'https://via.placeholder.com/150'}
                 />
                 <div className="w-full">
                     <div className="flex justify-between items-center">
                         <div className="flex cursor-pointer items-center space-x-2">
                             <span className="font-semibold">{post?.user?.fullName}</span>
-                            <span className="text-gray-600">@{post?.user?.email} · 2m</span>
+                            <span className="text-gray-600">
+                                @{post.user?.fullName ? post.user.fullName.split(" ").join("_").toLowerCase() : "unknown_user"} · 2m
+                            </span>
                         </div>
                         <div>
                             <Button onClick={handleClick}>
@@ -78,25 +97,30 @@ function PostCard({ post }) {
                     )}
                     <div className="mt-4 flex items-center justify-between text-gray-600">
                         <div className="flex space-x-5">
-                            <div className="flex items-center space-x-2 cursor-pointer hover:text-blue-500">
+                            <div className="flex items-center space-x-2 cursor-pointer hover:text-blue-500" onClick={() => setShowComments(!showComments)}>
                                 <ChatBubbleOutlineIcon fontSize="small" />
-                                <p className="text-sm" onClick={() => setShowComments(!showComments)}>
-                                    {post?.comments?.length || 0} Bình luận
+                                <p className="text-sm">
+                                    {totalComments}
                                 </p>
                             </div>
                             <div onClick={handleLikePost} className="cursor-pointer flex items-center space-x-2 hover:text-red-500">
                                 {isLiked ? <FavoriteIcon fontSize="small" color="error" /> : <FavoriteBorderIcon fontSize="small" />}
-                                <p className="text-sm">{post?.totalLikes}</p>
+                                <p className="text-sm">{totalLikes}</p>
                             </div>
-                            <div className="flex items-center space-x-2 cursor-pointer hover:text-green-500">
+                            <div className="flex items-center space-x-2 cursor-pointer hover:text-green-500" onClick={handleSharePost}>
                                 <RepeatIcon fontSize="small" />
-                                <p className="text-sm">Chia sẻ</p>
+                                <p className="text-sm">{totalReplies}</p>
                             </div>
                         </div>
                     </div>
+
                     {showComments && (
-                        <div className="mt-4">
+                        <div className="mt-4 p-3 border rounded-md bg-gray-100">
                             <div className="flex items-center space-x-2">
+                                <Avatar
+                                    src={currentUser?.avatar || 'https://via.placeholder.com/150'}
+                                    alt="User Avatar"
+                                />
                                 <TextField
                                     fullWidth
                                     size="small"
@@ -104,21 +128,26 @@ function PostCard({ post }) {
                                     placeholder="Viết bình luận..."
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
+                                    onKeyPress={(e) => e.key === "Enter" && handleCommentSubmit()}
                                 />
                                 <IconButton onClick={handleCommentSubmit} color="primary">
                                     <Send />
                                 </IconButton>
                             </div>
-                            <div className="mt-2 space-y-2">
-                                {post?.comments?.map((cmt, index) => (
-                                    <div key={index} className="flex items-start space-x-3 border p-2 rounded-md">
-                                        <Avatar src={cmt?.user?.avatar} />
-                                        <div>
-                                            <p className="text-sm font-semibold">{cmt?.user?.fullName}</p>
-                                            <p className="text-sm text-gray-700">{cmt?.content}</p>
+                            <div className="mt-3 max-h-60 overflow-y-auto">
+                                {post?.comments?.length > 0 ? (
+                                    post?.comments?.map((cmt, index) => (
+                                        <div key={index} className="flex items-start space-x-3 border-b p-2">
+                                            <Avatar src={cmt?.user?.avatar} />
+                                            <div className="bg-white p-2 rounded-md shadow-sm w-full">
+                                                <p className="text-sm font-semibold">{cmt?.user?.fullName}</p>
+                                                <p className="text-sm text-gray-700">{cmt?.content}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 text-center mt-2">Chưa có bình luận nào.</p>
+                                )}
                             </div>
                         </div>
                     )}

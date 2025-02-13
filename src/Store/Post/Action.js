@@ -80,7 +80,7 @@ export const createPostReply = (postData) => async (dispatch) => {
 
 export const createRePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/posts/${postId}/repost`);
+        const { data } = await api.put(`/api/posts/${postId}/repost`);
         console.log("Get all posts", data);
         dispatch({ type: RPOST_SUCCESS, payload: data });
     } catch (error) {

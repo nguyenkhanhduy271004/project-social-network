@@ -12,7 +12,7 @@ export const navigationMenu = [
     {
         title: 'Trang chủ',
         icon: <HomeIcon />,
-        path: '/home'
+        path: '/'
     },
     {
         title: 'Khám phá',
