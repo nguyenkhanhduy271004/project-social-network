@@ -17,54 +17,39 @@ const validationSchema = Yup.object({
 function HomeSection() {
     const dispatch = useDispatch();
     const { auth } = useSelector(store => store);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [selectedImage, setSelectedImage] = useState("");
+    const posts = useSelector(state => state.post.posts);
 
-    const handleSubmit = async (values, { resetForm }) => {
-
-        const postData = {
-            content: values.content,
-            file: formik.values.image,
-        };
-
-        await dispatch(createPost(postData));
-        resetForm();
-        setSelectedImage("");
-    };
-
-    const formik = useFormik({
-        initialValues: {
-            content: "",
-            image: "",
-        },
-        onSubmit: handleSubmit,
-        validationSchema,
-    });
-
-    const handleSelectImage = (event) => {
-        setUploadingImage(true);
-        const imageFile = event.target.files[0];
-
-        if (imageFile) {
-            const imageUrl = URL.createObjectURL(imageFile);
-            formik.setFieldValue("image", imageFile);
-            setSelectedImage(imageUrl);
-        }
-        setUploadingImage(false);
-    };
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         dispatch(getAllPosts());
-        dispatch(findPostsByLikeContainUser(auth.user?.id))
-    }, [dispatch, auth.posts]);
+        dispatch(findPostsByLikeContainUser(auth.user?.id));
+    }, [dispatch, auth.user?.id]);
 
-    const posts = useSelector((state) => state.post.posts);
+    const formik = useFormik({
+        initialValues: { content: "", image: null },
+        validationSchema,
+        onSubmit: async (values, { resetForm }) => {
+            await dispatch(createPost({ content: values.content, file: values.image }));
+            resetForm();
+            setSelectedImage(null);
+        }
+    });
+
+    const handleSelectImage = (event) => {
+        const imageFile = event.target.files[0];
+        if (imageFile) {
+            formik.setFieldValue("image", imageFile);
+            setSelectedImage(URL.createObjectURL(imageFile));
+        }
+    };
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
             <section>
                 <StorySlider />
             </section>
+
             <section>
                 <h1 className="py-5 text-2xl font-semibold text-gray-800 opacity-90">What's Happening</h1>
             </section>
@@ -73,7 +58,7 @@ function HomeSection() {
                 <div className="flex space-x-4 items-start">
                     <Avatar
                         alt="username"
-                        src="https://img.icons8.com/?size=100&id=pETkiIKt6qBf&format=png&color=000000"
+                        src={auth.user?.avatar || "https://img.icons8.com/?size=100&id=pETkiIKt6qBf&format=png&color=000000"}
                         className="w-14 h-14 border-2 border-gray-300"
                     />
                     <div className="w-full">
@@ -86,7 +71,7 @@ function HomeSection() {
                                     className="w-full border p-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     {...formik.getFieldProps("content")}
                                 />
-                                {formik.errors.content && formik.touched.content && (
+                                {formik.touched.content && formik.errors.content && (
                                     <span className="text-red-500 text-sm">{formik.errors.content}</span>
                                 )}
                             </div>
@@ -117,24 +102,20 @@ function HomeSection() {
                                     <TagFacesIcon className="text-[#1d9bf0]" />
                                 </div>
 
-                                <div>
-                                    <Button
-                                        sx={{
-                                            width: "120px",
-                                            borderRadius: "25px",
-                                            paddingY: "10px",
-                                            paddingX: "20px",
-                                            bgcolor: "#1e88e5",
-                                            '&:hover': {
-                                                bgcolor: '#0d7bb5'
-                                            }
-                                        }}
-                                        variant="contained"
-                                        type="submit"
-                                    >
-                                        Upload
-                                    </Button>
-                                </div>
+                                <Button
+                                    sx={{
+                                        width: "120px",
+                                        borderRadius: "25px",
+                                        paddingY: "10px",
+                                        paddingX: "20px",
+                                        bgcolor: "#1e88e5",
+                                        '&:hover': { bgcolor: '#0d7bb5' }
+                                    }}
+                                    variant="contained"
+                                    type="submit"
+                                >
+                                    Upload
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -142,7 +123,7 @@ function HomeSection() {
             </section>
 
             <section>
-                {posts && posts.length > 0 ? (
+                {posts?.length > 0 ? (
                     posts.map((post) => <PostCard key={post.id} post={post} />)
                 ) : (
                     <p className="text-gray-500">No posts available.</p>

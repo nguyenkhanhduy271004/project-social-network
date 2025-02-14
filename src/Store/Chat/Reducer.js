@@ -1,8 +1,9 @@
-import { SEND_MESSAGE_REQUEST, SEND_MESSAGE_SUCCESS, SEND_MESSAGE_FAILURE, GET_HISTORY_MESSAGE_REQUEST, GET_HISTORY_MESSAGE_SUCCESS, GET_HISTORY_MESSAGE_FAILURE } from "./ActionType";
+import { SEND_MESSAGE_REQUEST, SEND_MESSAGE_SUCCESS, SEND_MESSAGE_FAILURE, GET_HISTORY_MESSAGE_REQUEST, GET_HISTORY_MESSAGE_SUCCESS, GET_HISTORY_MESSAGE_FAILURE, GET_USER_REQUEST, GET_USER_SUCCESS, GET_USER_FAILURE } from "./ActionType";
 
 const initialState = {
     loading: false,
     messages: [],
+    users: [],
     error: null
 };
 
@@ -46,6 +47,30 @@ export const chatReducer = (state = initialState, action) => {
                 ...state,
                 loading: false,
                 error: action.payload
+            };
+        case GET_USER_REQUEST:
+            return {
+                ...state,
+                loading: true
+            };
+
+        case GET_USER_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                users: action.payload
+            };
+
+        case GET_USER_FAILURE:
+            return {
+                ...state,
+                loading: false,
+                error: action.payload
+            };
+        case "ADD_MESSAGE":
+            return {
+                ...state,
+                messages: [...state.messages, action.payload]
             };
 
         default:
