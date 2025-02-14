@@ -5,96 +5,108 @@ import CallIcon from '@mui/icons-material/Call';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import SendIcon from '@mui/icons-material/Send';
 import { useDispatch, useSelector } from 'react-redux';
-import { getHistoyMessage, sendMessage } from '../../Store/Chat/Action';
+import { getHistoyMessage, getUser, sendMessage } from '../../Store/Chat/Action';
 import SearchUser from '../SearchUser/SearchUser';
 import SockJS from 'sockjs-client';
 import { API_BASE_URL } from '../../config/api';
 import Stomp from 'stompjs';
+import { useNavigate } from 'react-router-dom';
 
 function Message() {
     const dispatch = useDispatch();
-    const auth = useSelector((state) => state.auth.user);
-    const loading = useSelector((store) => store.chat.loading);
-    const [messages, setMessages] = useState(useSelector(store => store.chat.messages) || []);
+    const navigate = useNavigate();
+
+    const auth = useSelector(state => state.auth.user);
+    const loading = useSelector(state => state.chat.loading);
+    const users = useSelector(state => state.chat.users);
+    const messages = useSelector(state => state.chat.messages);
+
     const [inputMessage, setInputMessage] = useState('');
     const [stompClient, setStompClient] = useState(null);
+    const [userId, setUserId] = useState(null);
 
     useEffect(() => {
-        dispatch(getHistoyMessage(auth.id === 1 ? 2 : 1));
-    }, []);
+        dispatch(getUser());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (userId) {
+            dispatch(getHistoyMessage(userId));
+        }
+    }, [userId, dispatch]);
 
     useEffect(() => {
         const sock = new SockJS(`${API_BASE_URL}/ws`);
         const stomp = Stomp.over(sock);
 
         stomp.connect({}, () => {
-            console.log("✅ WebSocket connected");
+            console.log("WebSocket connected");
             setStompClient(stomp);
         }, (error) => {
-            console.error("❌ WebSocket connection error:", error);
+            console.error("WebSocket connection error:", error);
         });
 
         return () => {
-            if (stomp && stomp.connected) {
-                stomp.disconnect(() => console.log("🔌 WebSocket disconnected"));
+            if (stomp.connected) {
+                stomp.disconnect(() => console.log("WebSocket disconnected"));
             }
         };
     }, []);
 
     useEffect(() => {
-        if (stompClient && auth) {
-            const subscription = stompClient.subscribe(`/user/${auth.id}/private`, (message) => {
+        if (stompClient && auth && userId) {
+            const subscription = stompClient.subscribe(`/user/3/private`, (message) => {
                 const newMessage = JSON.parse(message.body);
-                setMessages((prevMessages) => [...prevMessages, newMessage]);
+                console.log("📩 Tin nhắn nhận được:", newMessage);
+                dispatch({ type: "ADD_MESSAGE", payload: newMessage });
             });
 
             return () => subscription.unsubscribe();
         }
-    }, [stompClient, auth]);
+    }, [stompClient, auth, userId, dispatch]);
 
-
-    if (loading) {
-        return <h1 className="text-center text-gray-500">Đang tải tin nhắn...</h1>;
-    }
 
     const handleSendMessage = () => {
-        if (!stompClient || !stompClient.connected) {
-            console.warn("⚠️ Không thể gửi tin nhắn: WebSocket chưa kết nối!");
+        if (!stompClient || !stompClient.connected || !inputMessage.trim()) {
+            console.warn("Không thể gửi tin nhắn: WebSocket chưa kết nối hoặc tin nhắn rỗng!");
             return;
         }
 
-        if (inputMessage.trim() !== '') {
-            const messageData = { senderId: auth.id, receiverId: 2, content: inputMessage, timestamp: new Date().toISOString() };
-            stompClient.send(`/app/chat/${2}`, {}, JSON.stringify(messageData));
-            setMessages((prevMessages) => [...prevMessages, messageData]);
-            dispatch(sendMessage({ receiverId: auth.id === 1 ? 2 : 1, content: inputMessage }))
-            setInputMessage('');
-        }
+        const messageData = { senderId: auth.id, receiverId: userId, content: inputMessage, timestamp: new Date().toISOString() };
+        stompClient.send(`/app/chat/${userId}`, {}, JSON.stringify(messageData));
+        // dispatch(sendMessage({ receiverId: userId, content: inputMessage }));
+        setInputMessage('');
     };
 
     return (
         <div>
-            <Grid container className='h-screen overflow-y-hidden'>
+            <Grid container className='h-screen overflow-hidden'>
                 <Grid item xs={3} className='px-5'>
-                    <div className='flex h-full justify-between space-x-2'>
-                        <div className='w-full'>
-                            <div className='flex space-x-4 items-center py-5'>
-                                <WestIcon />
-                                <h1 className='text-xl font-bold'>Trang chủ</h1>
-                            </div>
-                            <div className='h-[83vh]'>
-                                <SearchUser />
-                                <div className='h-full space-y-4 mt-5 overflow-y-auto hideScrollbar'></div>
-                            </div>
+                    <div className='flex h-full flex-col'>
+                        <div className='flex items-center space-x-4 py-5' onClick={() => navigate("/")}>
+                            <WestIcon />
+                            <h1 className='text-xl font-bold'>Trang chủ</h1>
+                        </div>
+                        <SearchUser />
+                        <div className='overflow-y-auto flex-1 hideScrollbar'>
+                            {users?.length ? users.map((user) => (
+                                <div key={user.id} className="flex items-center space-x-3 p-3 border-b cursor-pointer hover:bg-gray-200"
+                                    onClick={() => setUserId(user.id)}>
+                                    <Avatar src={user.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"} alt={user.fullName} />
+                                    <p>{user.fullName}</p>
+                                </div>
+                            )) : (
+                                <p className='text-center text-gray-500'>Không có người dùng nào</p>
+                            )}
                         </div>
                     </div>
                 </Grid>
 
-                <Grid item xs={9} className='h-full'>
-                    <div className='flex justify-between items-center border-l p-5'>
+                <Grid item xs={9} className='h-full border-l'>
+                    <div className='flex justify-between items-center p-5'>
                         <div className='flex items-center space-x-3'>
                             <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="avatar" />
-                            <p>Nguyễn Khánh Duy</p>
+                            <p>{users.find(user => user.id === userId)?.fullName || "Chưa chọn người nhận"}</p>
                         </div>
                         <div className='flex space-x-3'>
                             <IconButton><CallIcon /></IconButton>
@@ -102,22 +114,18 @@ function Message() {
                         </div>
                     </div>
 
-                    <div className='hideScrollbar overflow-y-scroll h-[82vh] px-2 space-y-5 py-5'>
-                        {messages && messages.length > 0 ? (
+                    <div className='hideScrollbar overflow-y-scroll h-[82vh] px-2 space-y-5 py-10'>
+                        {messages?.length > 0 ? (
                             messages.map((message, index) => {
                                 const isSender = message.senderId === auth.id;
                                 return (
                                     <div key={index} className={`flex ${isSender ? 'justify-end' : 'justify-start'} space-x-3 py-2`}>
-                                        {!isSender && (
-                                            <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="receiver-avatar" />
-                                        )}
+                                        {!isSender && <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="receiver-avatar" />}
                                         <div className={`max-w-[70%] px-4 py-2 rounded-lg ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
                                             <p>{message.content}</p>
-                                            <span className='text-xs text-black'>{new Date(message.timestamp).toLocaleTimeString()}</span>
+                                            <span className='text-xs text-gray-500'>{new Date(message.timestamp).toLocaleTimeString()}</span>
                                         </div>
-                                        {isSender && (
-                                            <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="sender-avatar" />
-                                        )}
+                                        {isSender && <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="sender-avatar" />}
                                     </div>
                                 );
                             })
@@ -126,18 +134,16 @@ function Message() {
                         )}
                     </div>
 
-                    {/* Chat Input */}
-                    <div className='sticky bottom-0 border-1'>
-                        <div className='py-5 flex items-center justify-center space-x-5'>
-                            <input
-                                type="text"
-                                className='bg-transparent border border-[#3b40544] rounded-full w-[90%] py-3 px-5'
-                                placeholder='Nhập tin nhắn...'
-                                value={inputMessage}
-                                onChange={(e) => setInputMessage(e.target.value)}
-                            />
-                            <IconButton onClick={handleSendMessage}><SendIcon /></IconButton>
-                        </div>
+                    <div className='sticky bottom-0 border-t py-5 flex items-center px-5 space-x-3'>
+                        <input
+                            type="text"
+                            className='flex-1 bg-transparent border border-gray-400 rounded-full py-3 px-5'
+                            placeholder='Nhập tin nhắn...'
+                            value={inputMessage}
+                            onChange={(e) => setInputMessage(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        />
+                        <IconButton onClick={handleSendMessage}><SendIcon /></IconButton>
                     </div>
                 </Grid>
             </Grid>

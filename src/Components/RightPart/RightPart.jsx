@@ -1,7 +1,9 @@
 import React from 'react';
 import { Avatar, Button } from '@mui/material';
+import { useSelector } from 'react-redux';
 
 function RightPart() {
+    const user = useSelector(store => store.auth.user);
     const handleChangeTheme = () => {
         console.log("handle change theme");
     }
@@ -11,12 +13,12 @@ function RightPart() {
             <div className="profile flex items-center mb-5">
                 <Avatar
                     alt="Profile picture"
-                    src="https://storage.googleapis.com/a1aa/image/8lsy6wPPPYEctOVekg47pH5njAB5nQ40kpPRl5IzQcw.jpg"
+                    src={user.image ? user.image : "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"}
                     sx={{ width: 50, height: 50, marginRight: '10px' }}
                 />
                 <div className="profile-info flex-grow">
-                    <h2 className="text-sm font-semibold">khasnhduyyaka</h2>
-                    <p className="text-xs text-gray-600">Nguyễn Duy</p>
+                    <h2 className="text-sm font-semibold">@{user.email.split('@')[0]}</h2>
+                    <p className="text-xs text-gray-600">{user.fullName}</p>
                 </div>
                 <div className="profile-action text-blue-500 text-sm cursor-pointer">Chuyển</div>
             </div>
