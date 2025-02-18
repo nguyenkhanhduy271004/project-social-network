@@ -21,7 +21,7 @@ function StoryCircle() {
                     <Avatar sx={{ width: "5rem", height: "5rem" }}>
                         <AddIcon sx={{ fontSize: "3rem" }} />
                     </Avatar>
-                    <p>Thêm mới</p>
+                    <p className='mt-2'>Thêm mới</p>
                 </div>
                 <div className='flex overflow-x-auto space-x-4'>
                     {stories.map((story, index) => (

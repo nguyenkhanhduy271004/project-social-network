@@ -5,7 +5,7 @@ import { Avatar, Button, Menu, MenuItem } from '@mui/material';
 import { MoreHoriz } from '@mui/icons-material';
 import logo from '../../images/avatar/logo.png';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../Store/Auth/Action';
+import { getRandomUser, logout } from '../../Store/Auth/Action';
 
 function Navigation() {
     const { auth } = useSelector(store => store);
@@ -27,6 +27,9 @@ function Navigation() {
         handleClose();
     }
 
+    useEffect(() => {
+        dispatch(getRandomUser());
+    }, [])
 
     return (
         <div className='h-screen sticky top-0'>

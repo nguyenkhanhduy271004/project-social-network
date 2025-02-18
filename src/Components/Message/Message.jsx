@@ -1,5 +1,5 @@
 import { Avatar, Grid, IconButton } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import WestIcon from '@mui/icons-material/West';
 import CallIcon from '@mui/icons-material/Call';
 import VideocamIcon from '@mui/icons-material/Videocam';
@@ -24,6 +24,8 @@ function Message() {
     const [inputMessage, setInputMessage] = useState('');
     const [stompClient, setStompClient] = useState(null);
     const [userId, setUserId] = useState(null);
+
+    const messagesEndRef = useRef(null);
 
     useEffect(() => {
         dispatch(getUser());
@@ -55,26 +57,36 @@ function Message() {
 
     useEffect(() => {
         if (stompClient && auth && userId) {
-            const subscription = stompClient.subscribe(`/user/3/private`, (message) => {
+            const roomId = auth.id + userId;
+            const subscription = stompClient.subscribe(`/user/${roomId}/private`, (message) => {
                 const newMessage = JSON.parse(message.body);
                 console.log("📩 Tin nhắn nhận được:", newMessage);
-                dispatch({ type: "ADD_MESSAGE", payload: newMessage });
+                // dispatch({ type: "ADD_MESSAGE", payload: newMessage });
             });
 
             return () => subscription.unsubscribe();
         }
     }, [stompClient, auth, userId, dispatch]);
 
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+    }, [messages]);
 
     const handleSendMessage = () => {
+        if (!userId) {
+            alert("Vui lòng chọn người dùng để gửi tin nhắn")
+        }
         if (!stompClient || !stompClient.connected || !inputMessage.trim()) {
             console.warn("Không thể gửi tin nhắn: WebSocket chưa kết nối hoặc tin nhắn rỗng!");
             return;
         }
-
+        console.log(userId);
         const messageData = { senderId: auth.id, receiverId: userId, content: inputMessage, timestamp: new Date().toISOString() };
-        stompClient.send(`/app/chat/${userId}`, {}, JSON.stringify(messageData));
-        // dispatch(sendMessage({ receiverId: userId, content: inputMessage }));
+        const roomId = auth.id + userId;
+        stompClient.send(`/app/chat/${roomId}`, {}, JSON.stringify(messageData));
+        dispatch(sendMessage({ receiverId: userId, content: inputMessage }));
         setInputMessage('');
     };
 
@@ -117,13 +129,17 @@ function Message() {
                     <div className='hideScrollbar overflow-y-scroll h-[82vh] px-2 space-y-5 py-10'>
                         {messages?.length > 0 ? (
                             messages.map((message, index) => {
-                                const isSender = message.senderId === auth.id;
+                                const isSender = message.senderId === auth.id || message.receiverId !== auth.id;
                                 return (
                                     <div key={index} className={`flex ${isSender ? 'justify-end' : 'justify-start'} space-x-3 py-2`}>
                                         {!isSender && <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="receiver-avatar" />}
                                         <div className={`max-w-[70%] px-4 py-2 rounded-lg ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
                                             <p>{message.content}</p>
-                                            <span className='text-xs text-gray-500'>{new Date(message.timestamp).toLocaleTimeString()}</span>
+                                            <span className='text-xs text-gray-500'>
+                                                {message.timestamp && !isNaN(new Date(message.timestamp).getTime())
+                                                    ? new Date(message.timestamp).toLocaleTimeString()
+                                                    : "Không xác định"}
+                                            </span>
                                         </div>
                                         {isSender && <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="sender-avatar" />}
                                     </div>
@@ -132,6 +148,7 @@ function Message() {
                         ) : (
                             <p className='text-center text-gray-500'>Chưa có tin nhắn nào.</p>
                         )}
+                        <div ref={messagesEndRef} />
                     </div>
 
                     <div className='sticky bottom-0 border-t py-5 flex items-center px-5 space-x-3'>

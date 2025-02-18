@@ -1,6 +1,6 @@
 import axios from "axios"
 import { api, API_BASE_URL } from "../../config/api"
-import { FIND_USER_BY_ID_FAILURE, FIND_USER_BY_ID_SUCCESS, FOLLOW_USER_FAILURE, FOLLOW_USER_SUCCESS, GET_USER_PROFILE_USER_FAILURE, GET_USER_PROFILE_USER_SUCCESS, LOGIN_USER_FAILURE, LOGIN_USER_SUCCESS, LOGOUT, REGISTER_USER_FAILURE, REGISTER_USER_SUCCESS, UPDATE_USER_FAILURE, UPDATE_USER_SUCCESS } from "./ActionType";
+import { FIND_USER_BY_ID_FAILURE, FIND_USER_BY_ID_SUCCESS, FOLLOW_USER_FAILURE, FOLLOW_USER_SUCCESS, GET_RANDOM_USER_FAILURE, GET_RANDOM_USER_SUCCESS, GET_USER_PROFILE_USER_FAILURE, GET_USER_PROFILE_USER_SUCCESS, LOGIN_USER_FAILURE, LOGIN_USER_SUCCESS, LOGOUT, REGISTER_USER_FAILURE, REGISTER_USER_SUCCESS, UPDATE_USER_FAILURE, UPDATE_USER_SUCCESS } from "./ActionType";
 
 export const loginUser = (loginData) => async (dispatch) => {
     try {
@@ -80,6 +80,17 @@ export const followUser = (userId) => async (dispatch) => {
     } catch (error) {
         console.log(error);
         dispatch({ type: FOLLOW_USER_FAILURE, payload: error.message });
+    }
+}
+
+export const getRandomUser = () => async (dispatch) => {
+    try {
+        const { data } = await api.get(`/api/user/random`);
+
+        dispatch({ type: GET_RANDOM_USER_SUCCESS, payload: data });
+    } catch (error) {
+        console.log(error);
+        dispatch({ type: GET_RANDOM_USER_FAILURE, payload: error.message });
     }
 }
 

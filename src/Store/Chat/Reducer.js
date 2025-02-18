@@ -70,7 +70,15 @@ export const chatReducer = (state = initialState, action) => {
         case "ADD_MESSAGE":
             return {
                 ...state,
-                messages: [...state.messages, action.payload]
+                messages: [
+                    ...state.messages,
+                    {
+                        ...action.payload,
+                        timestamp: action.payload.timestamp
+                            ? new Date(action.payload.timestamp).toISOString()
+                            : new Date().toISOString()
+                    }
+                ]
             };
 
         default:
