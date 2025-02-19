@@ -61,7 +61,6 @@ function Message() {
             const subscription = stompClient.subscribe(`/user/${roomId}/private`, (message) => {
                 const newMessage = JSON.parse(message.body);
                 console.log("📩 Tin nhắn nhận được:", newMessage);
-                // dispatch({ type: "ADD_MESSAGE", payload: newMessage });
             });
 
             return () => subscription.unsubscribe();

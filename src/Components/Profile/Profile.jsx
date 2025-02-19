@@ -46,6 +46,7 @@ function Profile() {
     };
 
     const handleOpenPostModal = (post) => {
+        console.log(post);
         setSelectedPost(post);
         setOpenModal1(true);
     };
@@ -173,7 +174,7 @@ function Profile() {
                         </TabPanel>
                         <TabPanel value="2">
                             {post.posts && post.posts.length > 0 ? (
-                                <div className="flex flex-wrap gap-4" onClick={() => handleOpenPostModal(post)}>
+                                <div className="flex flex-wrap gap-4">
                                     {post.posts.map((post, index) => (
                                         post.image ? (
                                             <img
@@ -181,6 +182,7 @@ function Profile() {
                                                 src={post.image}
                                                 alt={`Post Image ${index}`}
                                                 className="w-32 h-32 object-cover"
+                                                onClick={() => handleOpenPostModal(post)}
                                             />
                                         ) : null
                                     ))}
