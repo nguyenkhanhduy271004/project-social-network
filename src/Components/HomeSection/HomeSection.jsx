@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createPost, findPostsByLikeContainUser, getAllPosts } from '../../Store/Post/Action';
 
 const validationSchema = Yup.object({
-    content: Yup.string().required("Tweet text is required"),
+    content: Yup.string().required("Text is required"),
 });
 
 function HomeSection() {
@@ -20,6 +20,9 @@ function HomeSection() {
     const posts = useSelector(state => state.post.posts);
 
     const [selectedImage, setSelectedImage] = useState(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    const emojis = ["😃", "😂", "😍", "🤔", "😭", "😎", "🥰", "😡", "👍", "🔥"];
 
     useEffect(() => {
         dispatch(getAllPosts());
@@ -41,6 +44,30 @@ function HomeSection() {
         if (imageFile) {
             formik.setFieldValue("image", imageFile);
             setSelectedImage(URL.createObjectURL(imageFile));
+        }
+    };
+
+    const handleAddEmoji = (emoji) => {
+        formik.setFieldValue("content", formik.values.content + " " + emoji);
+        setShowEmojiPicker(false);
+    };
+
+    const handleAddLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    formik.setFieldValue(
+                        "content",
+                        `${formik.values.content} 📍 Location: ${latitude}, ${longitude}`
+                    );
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                }
+            );
+        } else {
+            console.error("Geolocation is not supported by this browser.");
         }
     };
 
@@ -98,8 +125,33 @@ function HomeSection() {
                                             onChange={handleSelectImage}
                                         />
                                     </label>
-                                    <FmdGoodIcon className="text-[#1d9bf0]" />
-                                    <TagFacesIcon className="text-[#1d9bf0]" />
+
+                                    {/* Location Icon */}
+                                    <FmdGoodIcon
+                                        className="text-[#1d9bf0] cursor-pointer"
+                                        onClick={handleAddLocation}
+                                    />
+
+                                    {/* Emoji Picker */}
+                                    <div className="relative">
+                                        <TagFacesIcon
+                                            className="text-[#1d9bf0] cursor-pointer"
+                                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        />
+                                        {showEmojiPicker && (
+                                            <div className="absolute bg-white border shadow-lg rounded-lg p-2 top-8 left-0 flex flex-wrap w-44">
+                                                {emojis.map((emoji) => (
+                                                    <span
+                                                        key={emoji}
+                                                        className="text-xl cursor-pointer m-1 hover:bg-gray-200 p-1 rounded"
+                                                        onClick={() => handleAddEmoji(emoji)}
+                                                    >
+                                                        {emoji}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <Button

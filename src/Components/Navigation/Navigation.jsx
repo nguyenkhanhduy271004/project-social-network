@@ -49,7 +49,7 @@ function Navigation() {
 
             <div className='flex items-center justify-between mt-56'>
                 <div className='flex items-center space-x-3'>
-                    <Avatar alt='username' src='https://cdn-icons-png.flaticon.com/512/8345/8345328.png'></Avatar>
+                    <Avatar alt='username' src='https://cdn-icons-png.flaticon.com/512/8345/8345328.png' onClick={() => navigate("/account")}></Avatar>
                     <div>
                         <p>{auth.user?.fullName}</p>
                         <span className='opacity-70'>
