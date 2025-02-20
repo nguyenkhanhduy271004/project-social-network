@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate, BrowserRouter } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import './App.css';
 import HomePage from './Components/HomePage/HomePage';
 import Authentication from './Components/Authentication/Authentication';
@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { getUserProfile } from './Store/Auth/Action';
 import Profile from './Components/Profile/Profile';
+import Account from './Components/Account/Account';
 
 function App() {
   const dispatch = useDispatch();
@@ -31,7 +32,9 @@ function App() {
       <Route path="/message" element={auth.user ? <Message /> : <Navigate to="/login" />} />
       <Route path="/login" element={auth.user ? <Navigate to="/" /> : <Authentication />} />
       <Route path="/signup" element={auth.user ? <Navigate to="/" /> : <Authentication />} />
-      <Route path="/account" element={auth.user ? <Profile /> : <Navigate to="/login" />} />
+      <Route path="/account" element={auth.user ? <Account /> : <Navigate to="/login" />} />
+      <Route path="/profile/:id" element={<Profile />} />
+
     </Routes>
   );
 }

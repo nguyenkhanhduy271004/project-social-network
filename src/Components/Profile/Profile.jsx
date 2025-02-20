@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -13,31 +13,39 @@ import TabPanel from '@mui/lab/TabPanel';
 import PostCard from '../HomeSection/PostCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUsersPost } from '../../Store/Post/Action';
-import { updateUserProfile } from '../../Store/Auth/Action';
+import { findUserById, followUser, updateUserProfile } from '../../Store/Auth/Action';
 
 function Profile() {
+    const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { auth, post } = useSelector(store => store);
+    const user = useSelector(store => store.auth.findUser);
+    const posts = useSelector(store => store.post.posts);
+    const auth = useSelector(store => store.auth.user);
+    useEffect(() => {
+        dispatch(findUserById(id));
+        dispatch(getUsersPost(id));
+    }, [dispatch, id])
     const [selectedPost, setSelectedPost] = useState(null);
     const [openModal1, setOpenModal1] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [formData, setFormData] = useState({
-        fullName: auth.user?.fullName || '',
-        location: auth.user?.location || '',
-        website: auth.user?.website || '',
-        birthDate: auth.user?.birthDate || '',
+        fullName: user?.fullName || '',
+        location: user?.location || '',
+        website: user?.website || '',
+        birthDate: user?.birthDate || '',
         password: '',
-        mobile: auth.user?.mobile || '',
-        image: auth.user?.image || '',
-        backgroundImage: auth.user?.backgroundImage || '',
-        bio: auth.user?.bio || '',
+        mobile: user?.mobile || '',
+        image: user?.image || '',
+        backgroundImage: user?.backgroundImage || '',
+        bio: user?.bio || '',
     });
     const [openFollowingModal, setOpenFollowingModal] = useState(false);
     const [followingList, setFollowingList] = useState([]);
 
+
     const handleOpenFollowingModal = () => {
-        setFollowingList(auth.user?.following || []);
+        setFollowingList(user?.following || []);
         setOpenFollowingModal(true);
     };
 
@@ -60,9 +68,6 @@ function Profile() {
         navigate(-1);
     };
 
-    const handleOpenProfileModal = () => {
-        setOpenModal(true);
-    };
 
     const handleCloseProfileModal = () => {
         setOpenModal(false);
@@ -87,15 +92,15 @@ function Profile() {
         setValue(newValue);
     };
 
-    useEffect(() => {
-        dispatch(getUsersPost(auth.user?.id));
-    }, [dispatch, auth.user?.id]);
+    const handleFollowUser = (userId) => {
+        dispatch(followUser(userId));
+    }
 
     return (
         <div>
             <section className="z-50 flex items-center sticky top-0 bg-opacity-95">
                 <KeyboardBackspaceIcon className="cursor-pointer" onClick={handleBack} />
-                <h1 className="py-5 text-xl font-bold opacity-90 ml-5">{auth.user?.fullName}</h1>
+                <h1 className="py-5 text-xl font-bold opacity-90 ml-5">{user?.fullName}</h1>
             </section>
 
             <section>
@@ -110,22 +115,26 @@ function Profile() {
                     <Avatar
                         className="transform -translate-y-24"
                         alt="avatar"
-                        src={auth.user?.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"}
+                        src={user?.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"}
                         sx={{ width: '10rem', height: '10rem', border: '4px solid white' }}
                     />
-                    <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={handleOpenProfileModal}>
-                        Edit profile
+                    <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={() => handleFollowUser(user?.id)}>
+                        {user?.followers.some(follower => follower.id === auth.id) ? (
+                            <span className="text-black cursor-pointer">Following</span>
+                        ) : (
+                            <span className="text-black cursor-pointer">Follow</span>
+                        )}
                     </Button>
                 </div>
                 <div>
                     <div className="flex items-center">
-                        <h1 className="font-bold text-lg">{auth.user?.fullName}</h1>
-                        <img className="ml-2 w-5 h-5" src="https://cdn-icons-png.flaticon.com/512/6364/6364343.png" alt="content-image" />
+                        <h1 className="font-bold text-lg">{user?.fullName}</h1>
+                        <img className="ml-2 w-5 h-5" src="https://cdn-icons-png.flaticon.com/512/6364/6364343.png" alt="content" />
                     </div>
-                    <h1 className="text-gray-500">@{auth.user?.fullName ? auth.user.fullName.split(' ').join('_').toLowerCase() : 'unknown_user'}</h1>
+                    <h1 className="text-gray-500">@{user?.fullName ? user.fullName.split(' ').join('_').toLowerCase() : 'unknown_user'}</h1>
                 </div>
                 <div className="mt-2 space-y-3">
-                    <p>{auth.user?.bio}</p>
+                    <p>{user?.bio}</p>
                     <div className="py-1 flex space-x-5">
                         <div className="flex items-center">
                             <BusinessCenterIcon />
@@ -133,22 +142,22 @@ function Profile() {
                         </div>
                         <div className="flex items-center">
                             <LocationOnIcon />
-                            <p className="ml-2">{auth.user?.location}</p>
+                            <p className="ml-2">{user?.location}</p>
                         </div>
                         <div className="flex items-center">
                             <CalendarMonthIcon />
-                            <p className="ml-2">{auth.user?.birthDate}</p>
+                            <p className="ml-2">{user?.birthDate}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-5">
                         <div className="flex items-center space-x-1 font-semibold">
-                            <span>{auth.user?.following.length}</span>
+                            <span>{user?.following.length}</span>
                             <span className="text-gray-500 cursor-pointer" onClick={handleOpenFollowingModal}>
                                 Following
                             </span>
                         </div>
                         <div className="flex items-center space-x-1 font-semibold">
-                            <span>{auth.user?.followers.length}</span>
+                            <span>{user?.followers.length}</span>
                             <span className="text-gray-500">Followers</span>
                         </div>
                     </div>
@@ -166,21 +175,21 @@ function Profile() {
                             </TabList>
                         </Box>
                         <TabPanel value="1">
-                            {post.posts && post.posts.length > 0 ? (
-                                post.posts.map((post) => <PostCard key={post.id} post={post} />)
+                            {posts && posts.length > 0 ? (
+                                posts.map((post) => <PostCard key={post.id} post={post} />)
                             ) : (
                                 <p className="text-gray-500">No posts available.</p>
                             )}
                         </TabPanel>
                         <TabPanel value="2">
-                            {post.posts && post.posts.length > 0 ? (
+                            {posts && posts.length > 0 ? (
                                 <div className="flex flex-wrap gap-4">
-                                    {post.posts.map((post, index) => (
+                                    {posts.map((post, index) => (
                                         post.image ? (
                                             <img
                                                 key={index}
                                                 src={post.image}
-                                                alt={`Post Image ${index}`}
+                                                alt={`Post ${index}`}
                                                 className="w-32 h-32 object-cover"
                                                 onClick={() => handleOpenPostModal(post)}
                                             />
