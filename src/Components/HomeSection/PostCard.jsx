@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import RepeatIcon from '@mui/icons-material/Repeat';
 import { Avatar, Button, Menu, MenuItem, TextField, IconButton } from '@mui/material';
@@ -19,7 +19,8 @@ function PostCard({ post }) {
     const likedPosts = useSelector(state => state.post.likedPosts);
     const currentUser = useSelector(state => state.auth.user);
 
-    const [isLiked, setIsLiked] = useState(likedPosts?.some(likedPost => likedPost.id === post.id));
+    const isLiked = likedPosts?.some(likedPost => likedPost.id === post.id);
+
     const [totalLikes, setTotalLikes] = useState(post?.totalLikes || 0);
     const [totalReplies, setTotalReplies] = useState(post?.totalReplies || 0);
     const [totalComments, setTotalComments] = useState(post?.replyPosts?.length ?? 0);
@@ -42,7 +43,6 @@ function PostCard({ post }) {
 
     const handleLikePost = () => {
         dispatch(likePost(post?.id));
-        setIsLiked(!isLiked);
         setTotalLikes(prevLikes => isLiked ? prevLikes - 1 : prevLikes + 1);
     };
 
@@ -61,8 +61,6 @@ function PostCard({ post }) {
         dispatch(createRePost(post?.id));
         setTotalReplies(prevTotalReplies => prevTotalReplies + 1);
     };
-
-    useEffect(() => { }, [dispatch, isLiked, totalReplies, showComments]);
 
     return (
         <div className="border p-4 rounded-lg shadow-md bg-white mb-4">
@@ -99,9 +97,7 @@ function PostCard({ post }) {
                         <div className="flex space-x-5">
                             <div className="flex items-center space-x-2 cursor-pointer hover:text-blue-500" onClick={() => setShowComments(!showComments)}>
                                 <ChatBubbleOutlineIcon fontSize="small" />
-                                <p className="text-sm">
-                                    {totalComments}
-                                </p>
+                                <p className="text-sm">{totalComments}</p>
                             </div>
                             <div onClick={handleLikePost} className="cursor-pointer flex items-center space-x-2 hover:text-red-500">
                                 {isLiked ? <FavoriteIcon fontSize="small" color="error" /> : <FavoriteBorderIcon fontSize="small" />}

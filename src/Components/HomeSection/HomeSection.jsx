@@ -17,7 +17,7 @@ const validationSchema = Yup.object({
 function HomeSection() {
     const dispatch = useDispatch();
     const { auth } = useSelector(store => store);
-    const posts = useSelector(state => state.post.posts);
+    const { posts, loading } = useSelector(state => state.post);
 
     const [selectedImage, setSelectedImage] = useState(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -175,7 +175,9 @@ function HomeSection() {
             </section>
 
             <section>
-                {posts?.length > 0 ? (
+                {loading ? (
+                    <p className="text-gray-500 text-center font-semibold">Loading posts...</p>
+                ) : posts?.length > 0 ? (
                     posts.map((post) => <PostCard key={post.id} post={post} />)
                 ) : (
                     <p className="text-gray-500">No posts available.</p>

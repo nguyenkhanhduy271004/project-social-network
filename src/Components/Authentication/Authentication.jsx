@@ -3,13 +3,14 @@ import { Container, Box, Typography, TextField, Button, Divider, Link, MenuItem,
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { loginUser, registerUser } from "../../Store/Auth/Action";
-import { useNavigate } from "react-router-dom";
 
 function Authentication() {
 
     const [isLogin, setIsLogin] = useState();
+    const authError = useSelector((state) => state.auth.error);
+    const [error, setError] = useState("");
     const dispatch = useDispatch();
     useEffect(() => {
         const path = window.location.pathname;
@@ -54,6 +55,11 @@ function Authentication() {
         },
     });
 
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+        }
+    }, [authError]);
     return (
         <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
             <Container maxWidth={false} sx={{ width: "100vw", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", bgcolor: "black" }}>
@@ -76,8 +82,7 @@ function Authentication() {
                         }}
                     />
                     <Divider sx={{ my: 2 }}>HOẶC</Divider>
-
-                    {/* Form */}
+                    {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
                     <Box component="form" noValidate autoComplete="off" onSubmit={formik.handleSubmit}>
                         {!isLogin && (
                             <>
@@ -95,7 +100,6 @@ function Authentication() {
                                     InputLabelProps={{ style: { color: "white" } }}
                                 />
 
-                                {/* Date of Birth (Ngày sinh) */}
                                 <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
                                     <FormControl fullWidth variant="filled" sx={{ bgcolor: "#333" }}>
                                         <InputLabel sx={{ color: "white" }}>Ngày</InputLabel>

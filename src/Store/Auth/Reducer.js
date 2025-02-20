@@ -25,11 +25,13 @@ export const authReducer = (state = initialState, action) => {
         case GET_RANDOM_USER_SUCCESS:
             return { ...state, loading: false, error: null, users: action.payload }
         case FOLLOW_USER_SUCCESS:
-            return { ...state, loading: false, error: null, user: action.payload }
+            return { ...state, loading: false, error: null, userFollow: action.payload }
         case LOGOUT:
             return initialState
         case LOGIN_USER_FAILURE:
+            return { ...state, loading: false, error: "Tài khoản hoặc mật khẩu sai" }
         case REGISTER_USER_FAILURE:
+            return { ...state, loading: false, error: "Đăng kí thất bại" }
         case GET_USER_PROFILE_USER_FAILURE:
             return { ...state, loading: false, error: action.payload }
         default:
