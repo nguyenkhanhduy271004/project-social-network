@@ -29,15 +29,18 @@ export const storyReducer = (state = initialState, action) => {
             return { ...state, loading: true, error: null };
 
         case CREATE_STORY_SUCCESS:
-            return { ...state, loading: false, story: action.payload };
-
+            return {
+                ...state,
+                loading: false,
+                stories: [...state.stories, action.payload]
+            };
         case GET_STORY_SUCCESS:
             return { ...state, loading: false, story: action.payload };
 
         case DELETE_STORY_SUCCESS:
             return { ...state, loading: false, story: null };
         case GET_STORIES_SUCCESS:
-            return { ...state, loading: false, stories: null };
+            return { ...state, loading: false, stories: action.payload };
 
         case CREATE_STORY_FAILURE:
         case GET_STORY_FAILURE:

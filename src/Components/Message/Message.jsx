@@ -17,7 +17,6 @@ function Message() {
     const navigate = useNavigate();
 
     const auth = useSelector(state => state.auth.user);
-    const loading = useSelector(state => state.chat.loading);
     const users = useSelector(state => state.chat.users);
     const messages = useSelector(state => state.chat.messages);
 
@@ -60,7 +59,7 @@ function Message() {
             const roomId = auth.id + userId;
             const subscription = stompClient.subscribe(`/user/${roomId}/private`, (message) => {
                 const newMessage = JSON.parse(message.body);
-                console.log("📩 Tin nhắn nhận được:", newMessage);
+                // console.log("📩 Tin nhắn nhận được:", newMessage);
             });
 
             return () => subscription.unsubscribe();

@@ -2,11 +2,11 @@ import { api } from "../../config/api";
 import { CREATE_STORY_FAILURE, CREATE_STORY_SUCCESS, DELETE_STORY_FAILURE, DELETE_STORY_SUCCESS, GET_STORIES_FAILURE, GET_STORIES_SUCCESS, GET_STORY_FAILURE, GET_STORY_SUCCESS } from "./ActionType";
 
 
-export const createStory = (storyData) => async (dispatch) => {
+export const createStory = ({ file, content }) => async (dispatch) => {
     try {
         const formData = new FormData();
-        formData.append("file", storyData.file);
-        formData.append("content", storyData.content);
+        formData.append("file", file);
+        formData.append("content", content);
 
         const { data } = await api.post(`/api/story/create`, formData, {
             headers: {
