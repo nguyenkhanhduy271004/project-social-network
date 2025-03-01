@@ -18,6 +18,7 @@ function HomeSection() {
     const dispatch = useDispatch();
     const { auth } = useSelector(store => store);
     const { posts, loading } = useSelector(state => state.post);
+    const isLoading = useSelector(state => state.post.loading);
 
     const [selectedImage, setSelectedImage] = useState(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -70,6 +71,10 @@ function HomeSection() {
             console.error("Geolocation is not supported by this browser.");
         }
     };
+
+    if (isLoading) {
+        return "Loading...";
+    }
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">

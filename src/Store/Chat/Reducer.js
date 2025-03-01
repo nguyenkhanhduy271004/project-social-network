@@ -4,7 +4,8 @@ const initialState = {
     loading: false,
     messages: [],
     users: [],
-    error: null
+    error: null,
+    notifications: {}
 };
 
 export const chatReducer = (state = initialState, action) => {
@@ -19,7 +20,7 @@ export const chatReducer = (state = initialState, action) => {
             return {
                 ...state,
                 loading: false,
-                messages: [...state.messages, action.payload]
+                // messages: [...state.messages, action.payload]
             };
 
         case SEND_MESSAGE_FAILURE:
@@ -68,6 +69,7 @@ export const chatReducer = (state = initialState, action) => {
                 error: action.payload
             };
         case "ADD_MESSAGE":
+            console.log(action.payload)
             return {
                 ...state,
                 messages: [
@@ -80,7 +82,24 @@ export const chatReducer = (state = initialState, action) => {
                     }
                 ]
             };
-
+        case "ADD_NOTIFICATION":
+            console.log("Action received:", action.payload);
+            console.log(state.notifications);
+            return {
+                ...state,
+                notifications: {
+                    ...state.notifications,
+                    [action.payload.receiverId]: (state.notifications[action.payload.receiverId] || 0) + 1
+                }
+            };
+        case "RESET_NOTIFICATION":
+            return {
+                ...state,
+                notifications: {
+                    ...state.notifications,
+                    [action.payload.receiverId]: 0
+                }
+            };
         default:
             return state;
     }

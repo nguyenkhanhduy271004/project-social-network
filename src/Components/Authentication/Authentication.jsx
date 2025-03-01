@@ -57,7 +57,9 @@ function Authentication() {
 
     useEffect(() => {
         if (authError) {
-            setError(authError);
+            if (authError !== "Request failed with status code 500") {
+                setError(authError);
+            }
         }
     }, [authError]);
     return (

@@ -6,11 +6,11 @@ import VideocamIcon from '@mui/icons-material/Videocam';
 import SendIcon from '@mui/icons-material/Send';
 import { useDispatch, useSelector } from 'react-redux';
 import { getHistoyMessage, getUser, sendMessage } from '../../Store/Chat/Action';
-import SearchUser from '../SearchUser/SearchUser';
 import SockJS from 'sockjs-client';
 import { API_BASE_URL } from '../../config/api';
 import Stomp from 'stompjs';
 import { useNavigate } from 'react-router-dom';
+import { searchUsers } from '../../Store/Auth/Action';
 
 function Message() {
     const dispatch = useDispatch();
@@ -18,11 +18,13 @@ function Message() {
 
     const auth = useSelector(state => state.auth.user);
     const users = useSelector(state => state.chat.users);
+    const searchResults = useSelector(state => state.auth.userSearch);
     const messages = useSelector(state => state.chat.messages);
 
     const [inputMessage, setInputMessage] = useState('');
     const [stompClient, setStompClient] = useState(null);
     const [userId, setUserId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const messagesEndRef = useRef(null);
 
@@ -57,14 +59,33 @@ function Message() {
     useEffect(() => {
         if (stompClient && auth && userId) {
             const roomId = auth.id + userId;
+
+            if (stompClient.subscribedRoomId === roomId) {
+                return;
+            }
+
+            stompClient.subscribedRoomId = roomId;
+
             const subscription = stompClient.subscribe(`/user/${roomId}/private`, (message) => {
                 const newMessage = JSON.parse(message.body);
-                // console.log("📩 Tin nhắn nhận được:", newMessage);
+                dispatch({
+                    type: "ADD_MESSAGE",
+                    payload: newMessage
+                });
+
+                // if (newMessage.senderId !== auth.id) {
+                //     dispatch({
+                //         type: "ADD_NOTIFICATION",
+                //         payload: { senderId: newMessage.senderId, receiverId: auth.id }
+                //     });
+                // }
             });
 
             return () => subscription.unsubscribe();
         }
     }, [stompClient, auth, userId, dispatch]);
+
+
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -72,20 +93,35 @@ function Message() {
         }
     }, [messages]);
 
+    useEffect(() => {
+        // dispatch({
+        //     type: "RESET_NOTIFICATION",
+        //     payload: { receiverId: auth.id }
+        // });
+    }, [dispatch, auth.id])
+
     const handleSendMessage = () => {
         if (!userId) {
-            alert("Vui lòng chọn người dùng để gửi tin nhắn")
+            alert("Vui lòng chọn người dùng để gửi tin nhắn");
+            return;
         }
         if (!stompClient || !stompClient.connected || !inputMessage.trim()) {
             console.warn("Không thể gửi tin nhắn: WebSocket chưa kết nối hoặc tin nhắn rỗng!");
             return;
         }
-        console.log(userId);
         const messageData = { senderId: auth.id, receiverId: userId, content: inputMessage, timestamp: new Date().toISOString() };
         const roomId = auth.id + userId;
         stompClient.send(`/app/chat/${roomId}`, {}, JSON.stringify(messageData));
         dispatch(sendMessage({ receiverId: userId, content: inputMessage }));
         setInputMessage('');
+    };
+
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        if (query.trim() !== '') {
+            dispatch(searchUsers(query));
+        }
     };
 
     return (
@@ -97,15 +133,33 @@ function Message() {
                             <WestIcon />
                             <h1 className='text-xl font-bold'>Trang chủ</h1>
                         </div>
-                        <SearchUser />
+
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm người dùng..."
+                            className="w-full p-2 border rounded-lg"
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                        />
+
                         <div className='overflow-y-auto flex-1 hideScrollbar'>
-                            {users?.length ? users.map((user) => (
-                                <div key={user.id} className="flex items-center space-x-3 p-3 border-b cursor-pointer hover:bg-gray-200"
-                                    onClick={() => setUserId(user.id)}>
-                                    <Avatar src={user.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"} alt={user.fullName} />
-                                    <p>{user.fullName}</p>
-                                </div>
-                            )) : (
+                            {searchQuery && searchResults?.length ? (
+                                searchResults.map((user) => (
+                                    <div key={user.id} className="flex items-center space-x-3 p-3 border-b cursor-pointer hover:bg-gray-200"
+                                        onClick={() => setUserId(user.id)}>
+                                        <Avatar src={user.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"} alt={user.fullName} />
+                                        <p>{user.fullName}</p>
+                                    </div>
+                                ))
+                            ) : users?.length ? (
+                                users.map((user) => (
+                                    <div key={user.id} className="flex items-center space-x-3 p-3 border-b cursor-pointer hover:bg-gray-200"
+                                        onClick={() => setUserId(user.id)}>
+                                        <Avatar src={user.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"} alt={user.fullName} />
+                                        <p>{user.fullName}</p>
+                                    </div>
+                                ))
+                            ) : (
                                 <p className='text-center text-gray-500'>Không có người dùng nào</p>
                             )}
                         </div>
@@ -133,11 +187,7 @@ function Message() {
                                         {!isSender && <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="receiver-avatar" />}
                                         <div className={`max-w-[70%] px-4 py-2 rounded-lg ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
                                             <p>{message.content}</p>
-                                            <span className='text-xs text-gray-500'>
-                                                {message.timestamp && !isNaN(new Date(message.timestamp).getTime())
-                                                    ? new Date(message.timestamp).toLocaleTimeString()
-                                                    : "Không xác định"}
-                                            </span>
+                                            <span className='text-xs text-gray-500'>{new Date(message.timestamp).toLocaleTimeString()}</span>
                                         </div>
                                         {isSender && <Avatar src="https://cdn-icons-png.flaticon.com/512/8345/8345328.png" alt="sender-avatar" />}
                                     </div>
@@ -150,14 +200,8 @@ function Message() {
                     </div>
 
                     <div className='sticky bottom-0 border-t py-5 flex items-center px-5 space-x-3'>
-                        <input
-                            type="text"
-                            className='flex-1 bg-transparent border border-gray-400 rounded-full py-3 px-5'
-                            placeholder='Nhập tin nhắn...'
-                            value={inputMessage}
-                            onChange={(e) => setInputMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        />
+                        <input type="text" className='flex-1 border border-gray-400 rounded-full py-3 px-5' placeholder='Nhập tin nhắn...'
+                            value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()} />
                         <IconButton onClick={handleSendMessage}><SendIcon /></IconButton>
                     </div>
                 </Grid>
