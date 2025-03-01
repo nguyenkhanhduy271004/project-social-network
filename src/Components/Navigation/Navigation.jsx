@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { navigationMenu } from './NavigationMenu'
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Button, Menu, MenuItem } from '@mui/material';
+import { Avatar, Badge, Button, Menu, MenuItem } from '@mui/material';
 import { MoreHoriz } from '@mui/icons-material';
 import logo from '../../images/avatar/logo.png';
 import { useDispatch, useSelector } from 'react-redux';
-import { getRandomUser, logout } from '../../Store/Auth/Action';
+import { logout } from '../../Store/Auth/Action';
 
 function Navigation() {
     const { auth } = useSelector(store => store);
     const dispatch = useDispatch();
+    const notifications = useSelector(store => store.chat.notifications);
 
     const id = auth.user.id;
 
@@ -28,8 +29,9 @@ function Navigation() {
     }
 
     useEffect(() => {
-        dispatch(getRandomUser());
-    }, [])
+        console.log("Danh sách thông báo:", notifications);
+    }, [notifications]);
+
 
     return (
         <div className='h-screen sticky top-0'>
@@ -40,7 +42,13 @@ function Navigation() {
                 <div className='space-y-6 mt-4'>
                     {navigationMenu.map((item) =>
                         <div className='cursor-pointer flex space-x-3 items-center' onClick={() => navigate(item.path)}>
-                            {item.icon}
+                            {item.title === 'Thông báo' ? (
+                                <Badge badgeContent={notifications[id] || 0} color="error">
+                                    {item.icon}
+                                </Badge>
+                            ) : (
+                                item.icon
+                            )}
                             <p className='text-xl'>{item.title}</p>
                         </div>
                     )}

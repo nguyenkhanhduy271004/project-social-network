@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Snackbar } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useDispatch, useSelector } from 'react-redux';
 import { createStory, getStories } from '../../Store/Story/Action';
@@ -12,6 +12,8 @@ function StoryCircle() {
     const [open, setOpen] = useState(false);
     const [content, setContent] = useState('');
     const [file, setFile] = useState(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
 
     const [openImage, setOpenImage] = useState(false);
     const [selectedStories, setSelectedStories] = useState([]);
@@ -39,11 +41,13 @@ function StoryCircle() {
 
     const handleSubmit = () => {
         if (!file) {
-            alert("Vui lòng chọn ảnh để đăng story!");
+            setSnackbarMessage("Vui lòng chọn ảnh hoặc video để đăng story!");
+            setOpenSnackbar(true);
             return;
         }
         if (!content.trim()) {
-            alert("Vui lòng nhập nội dung story!");
+            setSnackbarMessage("Vui lòng nhập nội dung story!");
+            setOpenSnackbar(true);
             return;
         }
 
@@ -98,17 +102,20 @@ function StoryCircle() {
                             onChange={(index) => setCurrentIndex(index)}
                         >
                             {selectedStories.map((story, index) => (
-                                <div key={index} style={{ position: 'relative' }}>
-                                    <img
-                                        src={story.image}
-                                        alt="story"
-                                        style={{
-                                            width: "100%",
-                                            height: "auto",
-                                            objectFit: "    ",
-                                            borderRadius: "8px"
-                                        }}
-                                    />
+                                <div key={index} style={{ position: 'relative', width: '100%', height: '500px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    {story.image.endsWith('.mp4') || story.image.endsWith('.webm') || story.image.endsWith('.ogg') ? (
+                                        <video
+                                            src={story.image}
+                                            controls
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={story.image}
+                                            alt="story"
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                        />
+                                    )}
                                     <p style={{
                                         position: 'absolute',
                                         bottom: 10,
@@ -145,7 +152,7 @@ function StoryCircle() {
                     />
                     <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,video/*"
                         onChange={(e) => setFile(e.target.files[0])}
                         style={{ marginTop: '10px' }}
                     />
@@ -155,6 +162,13 @@ function StoryCircle() {
                     <Button onClick={handleSubmit} color="primary" disabled={!file}>Đăng</Button>
                 </DialogActions>
             </Dialog>
+
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={() => setOpenSnackbar(false)}
+                message={snackbarMessage}
+            />
         </div>
     );
 }

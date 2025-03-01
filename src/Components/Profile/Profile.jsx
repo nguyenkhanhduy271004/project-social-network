@@ -118,13 +118,18 @@ function Profile() {
                         src={user?.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"}
                         sx={{ width: '10rem', height: '10rem', border: '4px solid white' }}
                     />
-                    <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={() => handleFollowUser(user?.id)}>
-                        {user?.followers.some(follower => follower.id === auth.id) ? (
-                            <span className="text-black cursor-pointer">Following</span>
-                        ) : (
-                            <span className="text-black cursor-pointer">Follow</span>
-                        )}
-                    </Button>
+
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }}>Nhắn tin</Button>
+                        <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={() => handleFollowUser(user?.id)}>
+                            {user?.followers.some(follower => follower.id === auth.id) ? (
+                                <span className="cursor-pointer">Following</span>
+                            ) : (
+                                <span className="cursor-pointer">Follow</span>
+                            )}
+                        </Button>
+                    </Box>
+
                 </div>
                 <div>
                     <div className="flex items-center">
