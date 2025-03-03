@@ -22,7 +22,8 @@ function RightPart() {
 
     useEffect(() => {
         dispatch(getRandomUser());
-    }, [change])
+    }, [dispatch]);
+
 
     return (
         <div className="container bg-white text-black py-5 px-4 rounded-lg">

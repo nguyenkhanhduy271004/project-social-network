@@ -12,7 +12,7 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import PostCard from '../HomeSection/PostCard';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUsersPost } from '../../Store/Post/Action';
+import { getRepost, getUsersPost } from '../../Store/Post/Action';
 import { updateUserProfile } from '../../Store/Auth/Action';
 
 function Account() {
@@ -23,6 +23,7 @@ function Account() {
     const [openPostModal, setOpenPostModal] = useState(false);
     const [openProfileModal, setOpenProfileModal] = useState(false);
     const [openFollowingModal, setOpenFollowingModal] = useState(false);
+    const rePosts = useSelector(store => store.post.rePost);
     const [followingList, setFollowingList] = useState([]);
     const [formData, setFormData] = useState({
         fullName: auth.user?.fullName || '',
@@ -39,6 +40,7 @@ function Account() {
 
     useEffect(() => {
         dispatch(getUsersPost(auth.user?.id));
+        dispatch(getRepost());
     }, [dispatch, auth.user?.id]);
 
     const handleBack = () => navigate(-1);
@@ -136,7 +138,9 @@ function Account() {
                                 </div>
                             ) : <p className="text-gray-500">No images available.</p>}
                         </TabPanel>
-                        <TabPanel value="3">Item Three</TabPanel>
+                        <TabPanel value="3">
+                            {rePosts.length > 0 ? rePosts.map(post => <div className="w-[800px] mx-auto"><PostCard key={post.id} post={post} /></div>) : <p className="text-gray-500">No posts available.</p>}
+                        </TabPanel>
                     </TabContext>
                 </Box>
             </section>

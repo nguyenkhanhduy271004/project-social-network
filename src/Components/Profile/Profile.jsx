@@ -12,7 +12,7 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import PostCard from '../HomeSection/PostCard';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUsersPost } from '../../Store/Post/Action';
+import { getRepost, getUsersPost } from '../../Store/Post/Action';
 import { findUserById, followUser, updateUserProfile } from '../../Store/Auth/Action';
 
 function Profile() {
@@ -25,10 +25,12 @@ function Profile() {
     useEffect(() => {
         dispatch(findUserById(id));
         dispatch(getUsersPost(id));
+        dispatch(getRepost());
     }, [dispatch, id])
     const [selectedPost, setSelectedPost] = useState(null);
     const [openModal1, setOpenModal1] = useState(false);
     const [openModal, setOpenModal] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const [formData, setFormData] = useState({
         fullName: user?.fullName || '',
         location: user?.location || '',
@@ -42,6 +44,8 @@ function Profile() {
     });
     const [openFollowingModal, setOpenFollowingModal] = useState(false);
     const [followingList, setFollowingList] = useState([]);
+
+    const isFollowing = user?.followers.some(follower => follower.id === auth.id);
 
 
     const handleOpenFollowingModal = () => {
@@ -120,10 +124,21 @@ function Profile() {
                     />
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }}>Nhắn tin</Button>
-                        <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={() => handleFollowUser(user?.id)}>
-                            {user?.followers.some(follower => follower.id === auth.id) ? (
-                                <span className="cursor-pointer">Following</span>
+                        <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={() => navigate("/message")}>Nhắn tin</Button>
+                        <Button
+                            className="rounded-full"
+                            variant="contained"
+                            sx={{ borderRadius: "20px" }}
+                            onClick={() => handleFollowUser(user?.id)}
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
+                        >
+                            {isFollowing ? (
+                                isHovered ? (
+                                    <span className="cursor-pointer">Unfollow</span>
+                                ) : (
+                                    <span className="cursor-pointer">Following</span>
+                                )
                             ) : (
                                 <span className="cursor-pointer">Follow</span>
                             )}

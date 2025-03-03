@@ -5,6 +5,7 @@ const initialState = {
     loading: false,
     error: null,
     jwt: null,
+    users: []
 }
 export const authReducer = (state = initialState, action) => {
     switch (action.type) {
@@ -26,7 +27,12 @@ export const authReducer = (state = initialState, action) => {
         case GET_RANDOM_USER_SUCCESS:
             return { ...state, loading: false, error: null, users: action.payload }
         case FOLLOW_USER_SUCCESS:
-            return { ...state, loading: false, error: null, userFollow: action.payload }
+            return {
+                ...state,
+                loading: false,
+                error: null,
+                users: state.users.filter(user => user.id !== action.payload.id)
+            };
         case SEARCH_USERS_SUCCESS:
             return { ...state, loading: false, error: null, userSearch: action.payload }
         case LOGIN_USER_FAILURE:
