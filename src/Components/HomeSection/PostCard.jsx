@@ -15,15 +15,9 @@ function PostCard({ post }) {
 
     const user = useSelector(store => store.auth.user);
 
-    const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
-    const [openEditModal, setOpenEditModal] = useState(false);
-    const [editedContent, setEditedContent] = useState(post?.content || "");
-    const [editedImage, setEditedImage] = useState(null);
-    const [comment, setComment] = useState('');
+    const likedPosts = useSelector(state => Array.isArray(state.post.likedPosts) ? state.post.likedPosts : []);
 
-    const likedPosts = useSelector(state => state.post.likedPosts);
-    const isLiked = likedPosts?.some(likedPost => likedPost.id === post.id);
+    const [isLiked, setIsLiked] = useState(likedPosts.some(likedPost => likedPost.id === post.id));
 
     const [totalLikes, setTotalLikes] = useState(post?.totalLikes || 0);
     const [totalReplies, setTotalReplies] = useState(post?.totalReplies || 0);
@@ -32,6 +26,13 @@ function PostCard({ post }) {
     const reduxComments = useSelector(state => state.post.commentPost?.[post?.id] ?? []);
     const [comments, setComments] = useState(reduxComments);
     const [showComments, setShowComments] = useState(false);
+
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+    const [openEditModal, setOpenEditModal] = useState(false);
+    const [editedContent, setEditedContent] = useState(post?.content || "");
+    const [editedImage, setEditedImage] = useState(null);
+    const [comment, setComment] = useState('');
 
     useEffect(() => {
         if (post?.id) {
@@ -58,6 +59,9 @@ function PostCard({ post }) {
 
     const handleLikePost = () => {
         dispatch(likePost(post?.id));
+
+        setIsLiked(prev => !prev);
+
         setTotalLikes(prevLikes => isLiked ? prevLikes - 1 : prevLikes + 1);
     };
 
@@ -85,7 +89,7 @@ function PostCard({ post }) {
 
     const handleSharePost = () => {
         dispatch(createRePost(post?.id));
-        setTotalReplies(prevTotalReplies => prevTotalReplies + 1);
+        setTotalReplies(prevTotalReplies => prevTotalReplies == 1 ? 0 : 1);
     };
 
     const handleEditPost = () => {

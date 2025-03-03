@@ -75,8 +75,7 @@ export const updateUserProfile = (reqData) => async (dispatch) => {
 export const followUser = (userId) => async (dispatch) => {
     try {
         const { data } = await api.put(`/api/user/${userId}/follow`);
-
-        dispatch({ type: FOLLOW_USER_SUCCESS, payload: data });
+        dispatch({ type: FOLLOW_USER_SUCCESS, payload: { id: userId } });
     } catch (error) {
         console.log(error);
         dispatch({ type: FOLLOW_USER_FAILURE, payload: error.message });
