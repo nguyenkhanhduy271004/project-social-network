@@ -15,7 +15,6 @@ export const createStory = ({ file, content }) => async (dispatch) => {
             },
         });
 
-        console.log("Create Story:", data);
         dispatch({ type: CREATE_STORY_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -46,8 +45,8 @@ export const deleteStory = (storyId) => async (dispatch) => {
 
 export const getStories = () => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/story/`);
-        dispatch({ type: GET_STORIES_SUCCESS, payload: data });
+        const response = await api.get(`/api/story/`);
+        dispatch({ type: GET_STORIES_SUCCESS, payload: response.data.data });
     } catch (error) {
         dispatch({ type: GET_STORIES_FAILURE, payload: error.message });
     }

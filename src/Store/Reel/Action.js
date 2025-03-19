@@ -50,8 +50,8 @@ export const deleteReel = (reelId) => async (dispatch) => {
 
 export const getReels = () => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/reel/`);
-        dispatch({ type: GET_REELS_SUCCESS, payload: data });
+        const response = await api.get(`/api/reel/`);
+        dispatch({ type: GET_REELS_SUCCESS, payload: response.data.data });
     } catch (error) {
         dispatch({ type: GET_REELS_FAILURE, payload: error.message });
     }

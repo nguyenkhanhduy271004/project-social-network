@@ -15,7 +15,7 @@ function PostCard({ post }) {
 
     const user = useSelector(store => store.auth.user);
 
-    const likedPosts = useSelector(state => Array.isArray(state.post.likedPosts) ? state.post.likedPosts : []);
+    const likedPosts = useSelector(store => store.post.likedPosts);
 
     const [isLiked, setIsLiked] = useState(likedPosts.some(likedPost => likedPost.id === post.id));
 

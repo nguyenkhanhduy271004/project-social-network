@@ -3,8 +3,8 @@ import { ADD_COMMENT_POST_FAILURE, ADD_COMMENT_POST_SUCCESS, FIND_POST_BY_ID_FAI
 
 export const getAllPosts = () => async (dispatch) => {
     try {
-        const { data } = await api.get("/api/posts/");
-        dispatch({ type: GET_ALL_POSTS_SUCCESS, payload: data });
+        const response = await api.get("/api/posts/");
+        dispatch({ type: GET_ALL_POSTS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: GET_ALL_POSTS_FAILURE, payload: error.message });
@@ -13,8 +13,8 @@ export const getAllPosts = () => async (dispatch) => {
 
 export const getUsersPost = (userId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/posts/user/${userId}`);
-        dispatch({ type: GET_USER_POSTS_SUCCESS, payload: data });
+        const response = await api.get(`/api/posts/user/${userId}`);
+        dispatch({ type: GET_USER_POSTS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: GET_USER_POSTS_FAILURE, payload: error.message });
@@ -23,8 +23,8 @@ export const getUsersPost = (userId) => async (dispatch) => {
 
 export const findPostsByLikeContainUser = (userId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/posts/user/${userId}/likes`);
-        dispatch({ type: USER_LIKE_POST_SUCCESS, payload: data });
+        const response = await api.get(`/api/posts/user/${userId}/likes`);
+        dispatch({ type: USER_LIKE_POST_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: USER_LIKE_POST_FAILURE, payload: error.message });
@@ -155,9 +155,9 @@ export const getComments = (postId) => async (dispatch) => {
 
 export const getRepost = () => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/posts/repost`);
+        const response = await api.get(`/api/posts/repost`);
         dispatch({
-            type: GET_REPOST_SUCCESS, payload: data
+            type: GET_REPOST_SUCCESS, payload: response.data.data
         });
     } catch (error) {
         console.log(error);

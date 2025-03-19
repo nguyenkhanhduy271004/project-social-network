@@ -42,8 +42,9 @@ export const getUserProfile = (jwt) => async (dispatch) => {
             }
         });
 
+        console.log(response.data.data);
 
-        dispatch({ type: GET_USER_PROFILE_USER_SUCCESS, payload: response.data });
+        dispatch({ type: GET_USER_PROFILE_USER_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: GET_USER_PROFILE_USER_FAILURE, payload: error.message });
@@ -52,9 +53,9 @@ export const getUserProfile = (jwt) => async (dispatch) => {
 
 export const findUserById = (userId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/user/${userId}`);
+        const response = await api.get(`/api/user/${userId}`);
 
-        dispatch({ type: FIND_USER_BY_ID_SUCCESS, payload: data });
+        dispatch({ type: FIND_USER_BY_ID_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: FIND_USER_BY_ID_FAILURE, payload: error.message });
