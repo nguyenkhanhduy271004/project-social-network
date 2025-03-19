@@ -8,6 +8,7 @@ import Message from './Components/Message/Message';
 import Profile from './Components/Profile/Profile';
 import Account from './Components/Account/Account';
 import Reel from './Components/Reel/Reel';
+import Groups from './Components/Group/Group';
 
 function App() {
   const dispatch = useDispatch();
@@ -58,6 +59,8 @@ function App() {
       <Route path="/account" element={auth.user ? <Account /> : <Navigate to="/login" />} />
       <Route path="/profile/:id" element={<Profile />} />
       <Route path="/explore" element={<Reel />} />
+      <Route path="/group" element={<Groups />} />
+
     </Routes>
   );
 }
