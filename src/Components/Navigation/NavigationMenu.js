@@ -1,12 +1,52 @@
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Badge } from '@mui/material';
 import HomeIcon from "@mui/icons-material/Home";
 import ExploreIcon from "@mui/icons-material/Explore";
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MessageIcon from "@mui/icons-material/Message";
-import ListAltIcon from "@mui/icons-material/ListAlt";
 import GroupIcon from "@mui/icons-material/Group";
-import VerifiedIcon from "@mui/icons-material/Verified";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PendingIcon from "@mui/icons-material/Pending";
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+
+// Create a separate component for the notification badge
+const NotificationBadge = () => {
+    const unreadCount = useSelector(state => state.notification.unreadCount);
+    return (
+        <Badge
+            badgeContent={unreadCount}
+            color="error"
+            sx={{
+                '& .MuiBadge-badge': {
+                    right: -3,
+                    top: 3,
+                }
+            }}
+        >
+            <NotificationsIcon />
+        </Badge>
+    );
+};
+
+const MessageBadge = () => {
+    const unreadMessages = useSelector(state => state.chat.unreadMessages || 0);
+    return (
+        <Badge
+            badgeContent={unreadMessages}
+            color="error"
+            sx={{
+                '& .MuiBadge-badge': {
+                    right: -3,
+                    top: 3,
+                }
+            }}
+        >
+            <MessageIcon />
+        </Badge>
+    );
+};
 
 export const navigationMenu = [
     {
@@ -32,7 +72,7 @@ export const navigationMenu = [
     {
         title: 'Cộng đồng',
         icon: <GroupIcon />,
-        path: '/group'
+        path: '/groups'
     },
     {
         title: 'Trang cá nhân',
@@ -40,8 +80,20 @@ export const navigationMenu = [
         path: '/account'
     },
     {
+        title: 'Game',
+        icon: <SportsEsportsIcon />,
+        path: '/game'
+    },
+    {
         title: 'Xem thêm',
         icon: <PendingIcon />,
         path: '/pending'
     },
-]   
+    {
+        title: 'Quản trị',
+        icon: <AdminPanelSettingsIcon />,
+        path: '/admin',
+        adminOnly: true
+    }
+
+];   

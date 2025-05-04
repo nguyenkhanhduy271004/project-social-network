@@ -7,14 +7,18 @@ import {
     JOIN_GROUP_REQUEST, JOIN_GROUP_SUCCESS, JOIN_GROUP_FAILURE,
     LEAVE_GROUP_REQUEST, LEAVE_GROUP_SUCCESS, LEAVE_GROUP_FAILURE,
     REMOVE_MEMBER_REQUEST, REMOVE_MEMBER_SUCCESS, REMOVE_MEMBER_FAILURE,
-    CREATE_POST_REQUEST, CREATE_POST_SUCCESS, CREATE_POST_FAILURE
+    CREATE_POST_REQUEST, CREATE_POST_SUCCESS, CREATE_POST_FAILURE,
+    FETCH_USER_GROUPS_REQUEST, FETCH_USER_GROUPS_SUCCESS, FETCH_USER_GROUPS_FAILURE,
+    GET_POSTS_BY_GROUP_REQUEST, GET_POSTS_BY_GROUP_SUCCESS, GET_POSTS_BY_GROUP_FAILURE
 } from "./ActionType";
 
 const initialState = {
     groups: [],
     group: null,
     loading: false,
-    error: null
+    error: null,
+    userGroups: [],
+    posts: []
 };
 
 export const groupReducer = (state = initialState, action) => {
@@ -28,10 +32,12 @@ export const groupReducer = (state = initialState, action) => {
         case LEAVE_GROUP_REQUEST:
         case REMOVE_MEMBER_REQUEST:
         case CREATE_POST_REQUEST:
+        case FETCH_USER_GROUPS_REQUEST:
+        case GET_POSTS_BY_GROUP_REQUEST:
             return { ...state, loading: true, error: null };
 
         case GET_GROUPS_SUCCESS:
-            return { ...state, loading: false, groups: action.payload };
+            return { ...state, loading: false, groups: action.payload || [] };
 
         case GET_GROUP_BY_ID_SUCCESS:
             return { ...state, loading: false, group: action.payload };
@@ -56,10 +62,45 @@ export const groupReducer = (state = initialState, action) => {
             };
 
         case JOIN_GROUP_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                userGroups: [...state.userGroups, action.payload],
+            };
+
         case LEAVE_GROUP_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                userGroups: state.userGroups.filter(group => group.id !== action.payload.id),
+            };
+
         case REMOVE_MEMBER_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                userGroups: state.userGroups.map(group =>
+                    group.id === action.payload.id ? action.payload : group
+                ),
+            };
+
         case CREATE_POST_SUCCESS:
-            return { ...state, loading: false, group: action.payload };
+            return {
+                ...state,
+                loading: false,
+                posts: [...state.posts, action.payload],
+            };
+
+        case FETCH_USER_GROUPS_SUCCESS:
+            return { ...state, loading: false, userGroups: action.payload || [] };
+
+        case GET_POSTS_BY_GROUP_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                posts: action.payload || [],
+                error: null,
+            };
 
         case GET_GROUPS_FAILURE:
         case GET_GROUP_BY_ID_FAILURE:
@@ -70,10 +111,11 @@ export const groupReducer = (state = initialState, action) => {
         case LEAVE_GROUP_FAILURE:
         case REMOVE_MEMBER_FAILURE:
         case CREATE_POST_FAILURE:
+        case FETCH_USER_GROUPS_FAILURE:
+        case GET_POSTS_BY_GROUP_FAILURE:
             return { ...state, loading: false, error: action.payload };
 
         default:
             return state;
     }
 };
-

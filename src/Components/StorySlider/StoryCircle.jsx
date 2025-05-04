@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Snackbar } from '@mui/material';
+import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Snackbar, Box, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ImageIcon from '@mui/icons-material/Image';
 import { useDispatch, useSelector } from 'react-redux';
 import { createStory, getStories } from '../../Store/Story/Action';
 import { Carousel } from 'react-responsive-carousel';
@@ -8,7 +9,7 @@ import 'react-responsive-carousel/lib/styles/carousel.min.css';
 
 function StoryCircle() {
     const dispatch = useDispatch();
-    const stories = useSelector(state => state.story.stories);
+    const stories = useSelector(state => state.story.stories) || [];
     const [open, setOpen] = useState(false);
     const [content, setContent] = useState('');
     const [file, setFile] = useState(null);
@@ -139,27 +140,69 @@ function StoryCircle() {
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>Thêm Story</DialogTitle>
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', color: '#1976d2' }}>
+                    Thêm Story
+                </DialogTitle>
                 <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="Nội dung"
-                        variant="outlined"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        margin="dense"
-                    />
-                    <input
-                        type="file"
-                        accept="image/*,video/*"
-                        onChange={(e) => setFile(e.target.files[0])}
-                        style={{ marginTop: '10px' }}
-                    />
+                    <Box display="flex" flexDirection="column" gap={2} mt={1}>
+                        <TextField
+                            fullWidth
+                            label="Nội dung"
+                            variant="outlined"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            multiline
+                            rows={3}
+                            placeholder="Chia sẻ câu chuyện của bạn..."
+                        />
+                        <Box
+                            sx={{
+                                border: '2px dashed #1976d2',
+                                borderRadius: 2,
+                                p: 3,
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            }}
+                        >
+                            <label style={{ cursor: 'pointer' }}>
+                                <input
+                                    type="file"
+                                    accept="image/*,video/*"
+                                    onChange={(e) => setFile(e.target.files[0])}
+                                    style={{ display: 'none' }}
+                                />
+                                <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                                    <ImageIcon sx={{ fontSize: 40, color: '#1976d2' }} />
+                                    <Typography color="textSecondary">
+                                        Kéo thả hoặc click để chọn ảnh/video
+                                    </Typography>
+                                </Box>
+                            </label>
+                        </Box>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose} color="secondary">Hủy</Button>
-                    <Button onClick={handleSubmit} color="primary" disabled={!file}>Đăng</Button>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        onClick={handleClose}
+                        variant="outlined"
+                        color="secondary"
+                        sx={{ borderRadius: 2 }}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        variant="contained"
+                        color="primary"
+                        disabled={!file}
+                        sx={{ borderRadius: 2 }}
+                    >
+                        Đăng Story
+                    </Button>
                 </DialogActions>
             </Dialog>
 

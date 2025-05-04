@@ -1,105 +1,135 @@
-import { SEND_MESSAGE_REQUEST, SEND_MESSAGE_SUCCESS, SEND_MESSAGE_FAILURE, GET_HISTORY_MESSAGE_REQUEST, GET_HISTORY_MESSAGE_SUCCESS, GET_HISTORY_MESSAGE_FAILURE, GET_USER_REQUEST, GET_USER_SUCCESS, GET_USER_FAILURE } from "./ActionType";
+import {
+    SEND_MESSAGE_REQUEST,
+    SEND_MESSAGE_SUCCESS,
+    SEND_MESSAGE_FAILURE,
+    GET_HISTORY_MESSAGE_REQUEST,
+    GET_HISTORY_MESSAGE_SUCCESS,
+    GET_HISTORY_MESSAGE_FAILURE,
+    GET_USER_REQUEST,
+    GET_USER_SUCCESS,
+    GET_USER_FAILURE,
+    ADD_MESSAGE,
+    RESET_UNREAD_MESSAGES,
+    SET_MESSAGES,
+    SET_USERS,
+    SET_LOADING,
+    SET_ERROR
+} from './Action';
 
 const initialState = {
-    loading: false,
     messages: [],
     users: [],
+    loading: false,
     error: null,
-    notifications: {}
+    unreadMessages: 0,
+    messagesByUser: {} // Track messages by user
 };
 
 export const chatReducer = (state = initialState, action) => {
     switch (action.type) {
         case SEND_MESSAGE_REQUEST:
+        case GET_HISTORY_MESSAGE_REQUEST:
+        case GET_USER_REQUEST:
             return {
                 ...state,
-                loading: true
+                loading: true,
+                error: null
             };
 
         case SEND_MESSAGE_SUCCESS:
             return {
                 ...state,
                 loading: false,
-                // messages: [...state.messages, action.payload]
-            };
-
-        case SEND_MESSAGE_FAILURE:
-            return {
-                ...state,
-                loading: false,
-                error: action.payload
-            };
-
-        case GET_HISTORY_MESSAGE_REQUEST:
-            return {
-                ...state,
-                loading: true
+                error: null
             };
 
         case GET_HISTORY_MESSAGE_SUCCESS:
             return {
                 ...state,
                 loading: false,
-                messages: action.payload
-            };
-
-        case GET_HISTORY_MESSAGE_FAILURE:
-            return {
-                ...state,
-                loading: false,
-                error: action.payload
-            };
-        case GET_USER_REQUEST:
-            return {
-                ...state,
-                loading: true
+                messages: action.payload,
+                error: null
             };
 
         case GET_USER_SUCCESS:
             return {
                 ...state,
                 loading: false,
-                users: action.payload
+                users: action.payload,
+                error: null
             };
 
+        case SEND_MESSAGE_FAILURE:
+        case GET_HISTORY_MESSAGE_FAILURE:
         case GET_USER_FAILURE:
             return {
                 ...state,
                 loading: false,
                 error: action.payload
             };
-        case "ADD_MESSAGE":
-            console.log(action.payload)
+
+        case ADD_MESSAGE:
+            const newMessage = action.payload;
+            const isCurrentUserReceiver = newMessage.receiverId === action.currentUserId;
+            const isInMessagePage = action.currentPath?.includes('/message');
+            const shouldIncrementUnread = isCurrentUserReceiver && !isInMessagePage;
+
             return {
                 ...state,
-                messages: [
-                    ...state.messages,
-                    {
-                        ...action.payload,
-                        timestamp: action.payload.timestamp
-                            ? new Date(action.payload.timestamp).toISOString()
-                            : new Date().toISOString()
+                messages: [...state.messages, newMessage],
+                unreadMessages: shouldIncrementUnread ? state.unreadMessages + 1 : state.unreadMessages,
+                messagesByUser: {
+                    ...state.messagesByUser,
+                    [newMessage.senderId]: {
+                        ...state.messagesByUser[newMessage.senderId],
+                        unread: shouldIncrementUnread ?
+                            (state.messagesByUser[newMessage.senderId]?.unread || 0) + 1 :
+                            state.messagesByUser[newMessage.senderId]?.unread || 0,
+                        lastMessage: newMessage
                     }
-                ]
+                },
+                error: null
             };
-        case "ADD_NOTIFICATION":
-            console.log("Action received:", action.payload);
-            console.log(state.notifications);
+
+        case RESET_UNREAD_MESSAGES:
             return {
                 ...state,
-                notifications: {
-                    ...state.notifications,
-                    [action.payload.receiverId]: (state.notifications[action.payload.receiverId] || 0) + 1
+                unreadMessages: 0,
+                messagesByUser: {
+                    ...state.messagesByUser,
+                    [action.payload.userId]: {
+                        ...state.messagesByUser[action.payload.userId],
+                        unread: 0
+                    }
                 }
             };
-        case "RESET_NOTIFICATION":
+
+        case SET_MESSAGES:
             return {
                 ...state,
-                notifications: {
-                    ...state.notifications,
-                    [action.payload.receiverId]: 0
-                }
+                messages: action.payload,
+                error: null
             };
+
+        case SET_USERS:
+            return {
+                ...state,
+                users: action.payload,
+                error: null
+            };
+
+        case SET_LOADING:
+            return {
+                ...state,
+                loading: action.payload
+            };
+
+        case SET_ERROR:
+            return {
+                ...state,
+                error: action.payload
+            };
+
         default:
             return state;
     }

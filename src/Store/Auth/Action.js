@@ -1,7 +1,37 @@
 import axios from "axios"
 import { api, API_BASE_URL } from "../../config/api"
-import { FIND_USER_BY_ID_FAILURE, FIND_USER_BY_ID_SUCCESS, FOLLOW_USER_FAILURE, FOLLOW_USER_SUCCESS, GET_RANDOM_USER_FAILURE, GET_RANDOM_USER_SUCCESS, GET_USER_PROFILE_USER_FAILURE, GET_USER_PROFILE_USER_SUCCESS, LOGIN_USER_FAILURE, LOGIN_USER_SUCCESS, LOGOUT, REGISTER_USER_FAILURE, REGISTER_USER_SUCCESS, SEARCH_USERS_FAILURE, SEARCH_USERS_SUCCESS, UPDATE_USER_FAILURE, UPDATE_USER_SUCCESS } from "./ActionType";
+import { FIND_USER_BY_ID_FAILURE, FIND_USER_BY_ID_SUCCESS, FOLLOW_USER_FAILURE, FOLLOW_USER_SUCCESS, GET_RANDOM_USER_FAILURE, GET_RANDOM_USER_SUCCESS, GET_USER_PROFILE_USER_FAILURE, GET_USER_PROFILE_USER_SUCCESS, LOGIN_USER_FAILURE, LOGIN_USER_REQUEST, LOGIN_USER_SUCCESS, LOGOUT, REGISTER_USER_FAILURE, REGISTER_USER_SUCCESS, SEARCH_USERS_FAILURE, SEARCH_USERS_SUCCESS, UPDATE_USER_FAILURE, UPDATE_USER_SUCCESS } from "./ActionType";
 
+export const googleLogin = (credential) => async (dispatch) => {
+    try {
+        dispatch({ type: LOGIN_USER_REQUEST });
+
+        const res = await fetch("http://localhost:8080/auth/google", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                credential,
+                clientId: "615612093999-3ommfatdj5qm627gs6um9dneft4civdv.apps.googleusercontent.com"
+            }),
+        });
+
+        const data = await res.json();
+
+
+        if (data.token) {
+            console.log("Google login successful:", data.token);
+            localStorage.setItem("token", data.token);
+            dispatch({ type: LOGIN_USER_SUCCESS, payload: data.token });
+        } else {
+            dispatch({ type: LOGIN_USER_FAILURE, payload: "Failed to authenticate with Google" });
+        }
+    } catch (error) {
+        console.error("Google login error:", error);
+        dispatch({ type: LOGIN_USER_FAILURE, payload: error.message });
+    }
+};
 export const loginUser = (loginData) => async (dispatch) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/login`, loginData);
@@ -9,7 +39,6 @@ export const loginUser = (loginData) => async (dispatch) => {
         if (data.jwt) {
             localStorage.setItem("jwt", data.jwt);
         }
-
         dispatch({ type: LOGIN_USER_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -87,7 +116,7 @@ export const getRandomUser = () => async (dispatch) => {
     try {
         const { data } = await api.get(`/api/user/random`);
 
-        dispatch({ type: GET_RANDOM_USER_SUCCESS, payload: data });
+        dispatch({ type: GET_RANDOM_USER_SUCCESS, payload: data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: GET_RANDOM_USER_FAILURE, payload: error.message });

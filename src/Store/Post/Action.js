@@ -3,7 +3,7 @@ import { ADD_COMMENT_POST_FAILURE, ADD_COMMENT_POST_SUCCESS, FIND_POST_BY_ID_FAI
 
 export const getAllPosts = () => async (dispatch) => {
     try {
-        const response = await api.get("/api/posts/");
+        const response = await api.get("/api/posts");
         dispatch({ type: GET_ALL_POSTS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -62,13 +62,10 @@ export const createPost = (postData) => async (dispatch) => {
     }
 };
 
-export const editPost = (postId, postData) => async (dispatch) => {
+export const editPost = (postId, formData) => async (dispatch) => {
     try {
-        const formData = new FormData();
-        if (postData.file) {
-            formData.append("file", postData.file);
-        }
-        formData.append("content", postData.content);
+        console.log("Edited Content:", formData.get("content"));
+        console.log("Edited Image:", formData.get("file"));
 
         const { data } = await api.put(`/api/posts/${postId}/edit`, formData, {
             headers: {
@@ -84,6 +81,7 @@ export const editPost = (postId, postData) => async (dispatch) => {
         dispatch({ type: POST_EDIT_FAILURE, payload: error.message });
     }
 };
+
 
 export const createPostReply = (postData) => async (dispatch) => {
     try {
@@ -109,7 +107,7 @@ export const createRePost = (postId) => async (dispatch) => {
 
 export const likePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/${postId}/likes`);
+        const { data } = await api.post(`/api/posts/${postId}/likes`);
         dispatch({ type: LIKE_POST_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -140,11 +138,11 @@ export const createComment = (req) => async (dispatch) => {
 
 export const getComments = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/posts/${postId}/comment`);
+        const res = await api.get(`/api/posts/${postId}/comment`);
         dispatch({
             type: GET_COMMENT_POST_SUCCESS, payload: {
                 postId: postId,
-                comments: data
+                comments: res.data.data
             }
         });
     } catch (error) {

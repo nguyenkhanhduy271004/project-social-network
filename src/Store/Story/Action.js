@@ -45,7 +45,7 @@ export const deleteStory = (storyId) => async (dispatch) => {
 
 export const getStories = () => async (dispatch) => {
     try {
-        const response = await api.get(`/api/story/`);
+        const response = await api.get(`/api/story`);
         dispatch({ type: GET_STORIES_SUCCESS, payload: response.data.data });
     } catch (error) {
         dispatch({ type: GET_STORIES_FAILURE, payload: error.message });
