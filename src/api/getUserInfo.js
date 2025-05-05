@@ -1,6 +1,7 @@
 export const getUserInfo = async () => {
   const API_URL = process.env.REACT_APP_API_URL;
-  const path = '/api/user/info';
+  const API_PREFIX = process.env.REACT_APP_API_PREFIX;
+  const path = `/${API_PREFIX}/user/info`;
 
   try {
     const response = await fetch(`${API_URL}${path}`, {

@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '../../config/api';
 
-// Action Types
 export const SEND_MESSAGE_REQUEST = 'SEND_MESSAGE_REQUEST';
 export const SEND_MESSAGE_SUCCESS = 'SEND_MESSAGE_SUCCESS';
 export const SEND_MESSAGE_FAILURE = 'SEND_MESSAGE_FAILURE';
@@ -17,7 +16,8 @@ export const SET_USERS = 'SET_USERS';
 export const SET_LOADING = 'SET_LOADING';
 export const SET_ERROR = 'SET_ERROR';
 
-// Action creators
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
+
 export const setMessages = (messages) => ({
     type: SET_MESSAGES,
     payload: messages
@@ -50,11 +50,10 @@ export const resetUnreadMessages = (userId) => ({
     payload: { userId }
 });
 
-// Async actions
 export const sendMessage = (messageData) => async (dispatch) => {
     try {
         dispatch({ type: SEND_MESSAGE_REQUEST });
-        const res = await fetch(`${API_BASE_URL}/api/messages/send`, {
+        const res = await fetch(`${API_BASE_URL}/${API_PREFIX}/messages/send`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -72,10 +71,10 @@ export const sendMessage = (messageData) => async (dispatch) => {
     }
 };
 
-export const getHistoyMessage = (receiverId) => async (dispatch) => {
+export const getHistoryMessage = (receiverId) => async (dispatch) => {
     try {
         dispatch({ type: GET_HISTORY_MESSAGE_REQUEST });
-        const res = await fetch(`${API_BASE_URL}/api/messages/history?receiverId=${receiverId}`, {
+        const res = await fetch(`${API_BASE_URL}/${API_PREFIX}/messages/history?receiverId=${receiverId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -84,7 +83,6 @@ export const getHistoyMessage = (receiverId) => async (dispatch) => {
         });
         const data = await res.json();
         dispatch({ type: GET_HISTORY_MESSAGE_SUCCESS, payload: data });
-        // Reset unread messages when viewing chat history
         dispatch(resetUnreadMessages(receiverId));
     } catch (error) {
         console.error('Error fetching message history:', error);
@@ -95,7 +93,7 @@ export const getHistoyMessage = (receiverId) => async (dispatch) => {
 export const getUser = () => async (dispatch) => {
     try {
         dispatch({ type: GET_USER_REQUEST });
-        const res = await fetch(`${API_BASE_URL}/api/messages/user`, {
+        const res = await fetch(`${API_BASE_URL}/${API_PREFIX}/messages/user`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

@@ -16,9 +16,11 @@ import {
     GET_POSTS_BY_GROUP_FAILURE
 } from "./ActionType";
 
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
+
 export const getGroups = () => async (dispatch) => {
     try {
-        const response = await api.get(`/api/groups`);
+        const response = await api.get(`/${API_PREFIX}/groups`);
         dispatch({ type: GET_GROUPS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -28,7 +30,7 @@ export const getGroups = () => async (dispatch) => {
 
 export const getGroupById = (groupId) => async (dispatch) => {
     try {
-        const response = await api.get(`/api/groups/${groupId}`);
+        const response = await api.get(`/${API_PREFIX}/groups/${groupId}`);
         dispatch({ type: GET_GROUP_BY_ID_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -38,7 +40,7 @@ export const getGroupById = (groupId) => async (dispatch) => {
 
 export const createGroup = (groupData) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/groups`, groupData);
+        const { data } = await api.post(`/${API_PREFIX}/groups`, groupData);
         dispatch({ type: CREATE_GROUP_SUCCESS, payload: data });
         return data;
     } catch (error) {
@@ -50,7 +52,7 @@ export const createGroup = (groupData) => async (dispatch) => {
 
 export const updateGroup = (groupId, updateData) => async (dispatch) => {
     try {
-        const { data } = await api.put(`/api/groups/${groupId}`, updateData);
+        const { data } = await api.put(`/${API_PREFIX}/groups/${groupId}`, updateData);
         dispatch({ type: UPDATE_GROUP_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -60,7 +62,7 @@ export const updateGroup = (groupId, updateData) => async (dispatch) => {
 
 export const deleteGroup = (groupId) => async (dispatch) => {
     try {
-        await api.delete(`/api/groups/${groupId}`);
+        await api.delete(`/${API_PREFIX}/groups/${groupId}`);
         dispatch({ type: DELETE_GROUP_SUCCESS, payload: groupId });
     } catch (error) {
         console.log(error);
@@ -70,7 +72,7 @@ export const deleteGroup = (groupId) => async (dispatch) => {
 
 export const joinGroup = (groupId) => async (dispatch) => {
     try {
-        await api.post(`/api/groups/${groupId}/join`);
+        await api.post(`/${API_PREFIX}/groups/${groupId}/join`);
         dispatch({ type: JOIN_GROUP_SUCCESS, payload: groupId });
     } catch (error) {
         console.log(error);
@@ -80,7 +82,7 @@ export const joinGroup = (groupId) => async (dispatch) => {
 
 export const leaveGroup = (groupId) => async (dispatch) => {
     try {
-        await api.post(`/api/groups/${groupId}/leave`);
+        await api.post(`/${API_PREFIX}/groups/${groupId}/leave`);
         dispatch({ type: LEAVE_GROUP_SUCCESS, payload: groupId });
     } catch (error) {
         console.log(error);
@@ -90,7 +92,7 @@ export const leaveGroup = (groupId) => async (dispatch) => {
 
 export const removeMember = (groupId, memberId) => async (dispatch) => {
     try {
-        await api.delete(`/api/groups/${groupId}/members/${memberId}`);
+        await api.delete(`/${API_PREFIX}/groups/${groupId}/members/${memberId}`);
         dispatch({ type: REMOVE_MEMBER_SUCCESS, payload: { groupId, memberId } });
     } catch (error) {
         console.log(error);
@@ -125,7 +127,7 @@ export const createPostInGroup = (groupId, postData) => async (dispatch) => {
 
 export const fetchUserGroups = () => async (dispatch) => {
     try {
-        const response = await api.get(`/api/groups/my-groups`);
+        const response = await api.get(`/${API_PREFIX}/groups/my-groups`);
         dispatch({ type: FETCH_USER_GROUPS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -137,7 +139,7 @@ export const getPostsByGroupId = (groupId) => async (dispatch) => {
     try {
         dispatch({ type: GET_POSTS_BY_GROUP_REQUEST });
 
-        const response = await api.get(`/api/groups/${groupId}/posts`);
+        const response = await api.get(`/${API_PREFIX}/groups/${groupId}/posts`);
         dispatch({
             type: GET_POSTS_BY_GROUP_SUCCESS,
             payload: response.data.data,
@@ -157,7 +159,7 @@ export const getPostsFromGroup = () => async (dispatch) => {
     try {
         dispatch({ type: GET_POSTS_BY_GROUP_REQUEST });
 
-        const response = await api.get(`/api/groups/posts`);
+        const response = await api.get(`/${API_PREFIX}/groups/posts`);
         dispatch({
             type: GET_POSTS_BY_GROUP_SUCCESS,
             payload: response.data.data,

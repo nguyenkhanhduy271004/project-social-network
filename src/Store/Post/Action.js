@@ -1,9 +1,9 @@
 import { api } from "../../config/api";
 import { ADD_COMMENT_POST_FAILURE, ADD_COMMENT_POST_SUCCESS, FIND_POST_BY_ID_FAILURE, FIND_POST_BY_ID_SUCCESS, GET_ALL_POSTS_FAILURE, GET_ALL_POSTS_SUCCESS, GET_COMMENT_POST_FAILURE, GET_COMMENT_POST_SUCCESS, GET_REPOST_FAILURE, GET_REPOST_SUCCESS, GET_USER_POSTS_FAILURE, GET_USER_POSTS_SUCCESS, LIKE_POST_FAILURE, LIKE_POST_SUCCESS, POST_CREATE_FAILURE, POST_CREATE_SUCCESS, POST_DELETE_FAILURE, POST_DELETE_SUCCESS, POST_EDIT_FAILURE, POST_EDIT_SUCCESS, REPLY_POST_FAILURE, REPLY_POST_SUCCESS, RPOST_FAILURE, RPOST_SUCCESS, USER_LIKE_POST_FAILURE, USER_LIKE_POST_SUCCESS } from "./ActionType";
-
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
 export const getAllPosts = () => async (dispatch) => {
     try {
-        const response = await api.get("/api/posts");
+        const response = await api.get(`/${API_PREFIX}/posts`);
         dispatch({ type: GET_ALL_POSTS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -13,7 +13,7 @@ export const getAllPosts = () => async (dispatch) => {
 
 export const getUsersPost = (userId) => async (dispatch) => {
     try {
-        const response = await api.get(`/api/posts/user/${userId}`);
+        const response = await api.get(`/${API_PREFIX}/posts/user/${userId}`);
         dispatch({ type: GET_USER_POSTS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -23,7 +23,7 @@ export const getUsersPost = (userId) => async (dispatch) => {
 
 export const findPostsByLikeContainUser = (userId) => async (dispatch) => {
     try {
-        const response = await api.get(`/api/posts/user/${userId}/likes`);
+        const response = await api.get(`/${API_PREFIX}/posts/user/${userId}/likes`);
         dispatch({ type: USER_LIKE_POST_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -33,7 +33,7 @@ export const findPostsByLikeContainUser = (userId) => async (dispatch) => {
 
 export const findPostsById = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/posts/${postId}`);
+        const { data } = await api.get(`/${API_PREFIX}/posts/${postId}`);
         dispatch({ type: FIND_POST_BY_ID_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -47,7 +47,7 @@ export const createPost = (postData) => async (dispatch) => {
         formData.append("file", postData.file);
         formData.append("content", postData.content);
 
-        const { data } = await api.post(`/api/posts/create`, formData, {
+        const { data } = await api.post(`/${API_PREFIX}/posts/create`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
@@ -67,7 +67,7 @@ export const editPost = (postId, formData) => async (dispatch) => {
         console.log("Edited Content:", formData.get("content"));
         console.log("Edited Image:", formData.get("file"));
 
-        const { data } = await api.put(`/api/posts/${postId}/edit`, formData, {
+        const { data } = await api.put(`/${API_PREFIX}/posts/${postId}/edit`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
@@ -85,7 +85,7 @@ export const editPost = (postId, formData) => async (dispatch) => {
 
 export const createPostReply = (postData) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/posts/reply`, postData);
+        const { data } = await api.post(`/${API_PREFIX}/posts/reply`, postData);
         console.log("Get all posts", data);
         dispatch({ type: REPLY_POST_SUCCESS, payload: data });
     } catch (error) {
@@ -96,7 +96,7 @@ export const createPostReply = (postData) => async (dispatch) => {
 
 export const createRePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.put(`/api/posts/${postId}/repost`);
+        const { data } = await api.put(`/${API_PREFIX}/posts/${postId}/repost`);
         console.log("Get all posts", data);
         dispatch({ type: RPOST_SUCCESS, payload: data });
     } catch (error) {
@@ -107,7 +107,7 @@ export const createRePost = (postId) => async (dispatch) => {
 
 export const likePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/posts/${postId}/likes`);
+        const { data } = await api.post(`/${API_PREFIX}/posts/${postId}/likes`);
         dispatch({ type: LIKE_POST_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -117,7 +117,7 @@ export const likePost = (postId) => async (dispatch) => {
 
 export const deletePost = (postId) => async (dispatch) => {
     try {
-        const { data } = await api.delete(`/api/posts/${postId}`);
+        const { data } = await api.delete(`/${API_PREFIX}/posts/${postId}`);
         console.log("Get all posts", data);
         dispatch({ type: POST_DELETE_SUCCESS, payload: postId });
     } catch (error) {
@@ -128,7 +128,7 @@ export const deletePost = (postId) => async (dispatch) => {
 
 export const createComment = (req) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/api/posts/${req.postId}/comment`, req);
+        const { data } = await api.post(`/${API_PREFIX}/posts/${req.postId}/comment`, req);
         dispatch({ type: ADD_COMMENT_POST_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -138,7 +138,7 @@ export const createComment = (req) => async (dispatch) => {
 
 export const getComments = (postId) => async (dispatch) => {
     try {
-        const res = await api.get(`/api/posts/${postId}/comment`);
+        const res = await api.get(`/${API_PREFIX}/posts/${postId}/comment`);
         dispatch({
             type: GET_COMMENT_POST_SUCCESS, payload: {
                 postId: postId,
@@ -153,7 +153,7 @@ export const getComments = (postId) => async (dispatch) => {
 
 export const getRepost = () => async (dispatch) => {
     try {
-        const response = await api.get(`/api/posts/repost`);
+        const response = await api.get(`/${API_PREFIX}/posts/repost`);
         dispatch({
             type: GET_REPOST_SUCCESS, payload: response.data.data
         });

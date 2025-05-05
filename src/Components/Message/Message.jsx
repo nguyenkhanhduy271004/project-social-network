@@ -1,19 +1,18 @@
-import { Avatar, Grid, IconButton, CircularProgress, Alert, Snackbar } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
-import WestIcon from '@mui/icons-material/West';
 import CallIcon from '@mui/icons-material/Call';
-import VideocamIcon from '@mui/icons-material/Videocam';
 import SendIcon from '@mui/icons-material/Send';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import WestIcon from '@mui/icons-material/West';
+import { Alert, Avatar, CircularProgress, Grid, IconButton, Snackbar, Tooltip } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getHistoyMessage, getUser, addMessage, resetUnreadMessages } from '../../Store/Chat/Action';
+import { useLocation, useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client';
-import { API_BASE_URL } from '../../config/api';
 import Stomp from 'stompjs';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { searchUsers } from '../../Store/Auth/Action';
-import { handleNewMessage } from '../../Store/Notification/Action';
-import { MessageSkeleton } from '../Common/LoadingStates';
+import { API_BASE_URL } from '../../config/api';
+import { findUserById, searchUsers } from '../../Store/Auth/Action';
+import { addMessage, getHistoryMessage, getUser, resetUnreadMessages } from '../../Store/Chat/Action';
 import { useLoading } from '../../utils/LoadingContext';
+import { MessageSkeleton } from '../Common/LoadingStates';
 
 function Message() {
     const dispatch = useDispatch();
@@ -22,9 +21,12 @@ function Message() {
     const { showLoading, hideLoading } = useLoading();
 
     const auth = useSelector(state => state.auth.user);
-    const users = useSelector(state => state.chat.users);
+    const [users, setUsers] = useState(useSelector(state => state.chat.users) || []);
     const searchResults = useSelector(state => state.auth.userSearch);
     const messages = useSelector(state => state.chat.messages);
+    const findUser = useSelector(state => state.auth.findUser);
+
+    const loading = useSelector(state => state.chat.users);
 
     const [inputMessage, setInputMessage] = useState('');
     const [stompClient, setStompClient] = useState(null);
@@ -35,37 +37,75 @@ function Message() {
     const [isLoading, setIsLoading] = useState(false);
 
     const messagesEndRef = useRef(null);
+    const queryParams = new URLSearchParams(location.search);
+    const newUserId = queryParams.get("newChat");
+
+    useEffect(() => {
+        if (newUserId) {
+            setUserId(newUserId);
+            dispatch(findUserById(newUserId));
+        }
+    }, [newUserId, dispatch]);
+
+    useEffect(() => {
+        if (findUser?.id && !users.some(user => user.id === findUser.id)) {
+            setUsers([...users, { id: findUser.id, fullName: findUser.fullName, image: findUser.image }]);
+        }
+    }, [findUser, users]);
+
+
+    useEffect(() => {
+        if (auth) {
+            dispatch(getUser());
+        }
+    }, [dispatch, auth]);
+
+
+
+    useEffect(() => {
+        if (users?.length > 0 && !userId) {
+            setUserId(users[0].id);
+        }
+    }, [users]);
 
     useEffect(() => {
         if (!auth) return;
+        const jwt = localStorage.getItem('jwt');
+        if (!jwt) {
+            setError('Không tìm thấy token xác thực');
+            return;
+        }
 
         setIsConnecting(true);
         showLoading('Connecting to chat server...');
         const sock = new SockJS(`${API_BASE_URL}/ws`);
         const stomp = Stomp.over(sock);
+        if (process.env.NODE_ENV !== 'production') {
+            stomp.debug = console.log;
+        }
 
-        // Disable debug logging
-        stomp.debug = null;
-
-        const headers = {
-            Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        const connect = (attempt = 1, maxAttempts = 3) => {
+            stomp.connect(
+                { Authorization: `Bearer ${jwt}` },
+                () => {
+                    setStompClient(stomp);
+                    setIsConnecting(false);
+                    setError('');
+                    hideLoading();
+                },
+                (error) => {
+                    if (attempt < maxAttempts) {
+                        setTimeout(() => connect(attempt + 1, maxAttempts), 2000);
+                    } else {
+                        setIsConnecting(false);
+                        setError('Không thể kết nối đến máy chủ chat');
+                        hideLoading();
+                    }
+                }
+            );
         };
 
-        stomp.connect(headers,
-            () => {
-                console.log("WebSocket connected");
-                setStompClient(stomp);
-                setIsConnecting(false);
-                setError('');
-                hideLoading();
-            },
-            (error) => {
-                console.error("WebSocket connection error:", error);
-                setIsConnecting(false);
-                setError('Không thể kết nối đến máy chủ chat');
-                hideLoading();
-            }
-        );
+        connect();
 
         return () => {
             if (stomp?.connected) {
@@ -74,48 +114,27 @@ function Message() {
         };
     }, [auth, showLoading, hideLoading]);
 
-    // Load users
     useEffect(() => {
-        if (auth) {
-            dispatch(getUser());
-        }
-    }, [dispatch, auth]);
-
-    // Set first user as default when users are loaded
-    useEffect(() => {
-        if (users && users.length > 0 && !userId) {
-            setUserId(users[0].id);
-        }
-    }, [users, userId]);
-
-    // Load message history
-    useEffect(() => {
-        if (userId && auth) {
+        if (userId && auth && !messages.some(msg => msg.receiverId === userId || msg.senderId === userId)) {
             setIsLoading(true);
-            dispatch(getHistoyMessage(userId))
+            dispatch(getHistoryMessage(userId))
+                .catch(() => setError('Không thể tải lịch sử tin nhắn'))
                 .finally(() => setIsLoading(false));
         }
-    }, [userId, dispatch, auth]);
+    }, [userId, auth, dispatch, messages]);
 
-    // Subscribe to private messages
     useEffect(() => {
-        if (stompClient && auth && userId) {
-            // Subscribe to private messages
+        if (stompClient?.connected && auth) {
             const subscription = stompClient.subscribe(
                 `/user/${auth.id}/private`,
                 (message) => {
                     const newMessage = JSON.parse(message.body);
                     dispatch(addMessage(newMessage, auth.id, location.pathname));
-
-                    // if (!location.pathname.includes('/message')) {
-                    //     dispatch(handleNewMessage(newMessage, location.pathname));
-                    // }
                 }
             );
-
             return () => subscription.unsubscribe();
         }
-    }, [stompClient, auth, userId, dispatch, location.pathname]);
+    }, [stompClient, auth, dispatch, location.pathname]);
 
     useEffect(() => {
         if (userId && location.pathname.includes('/message')) {
@@ -123,7 +142,6 @@ function Message() {
         }
     }, [userId, location.pathname, dispatch]);
 
-    // Scroll to bottom when new messages arrive
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -132,7 +150,6 @@ function Message() {
 
     const handleSendMessage = () => {
         if (!userId || !inputMessage.trim()) return;
-
         if (!stompClient?.connected) {
             setError('Mất kết nối đến máy chủ chat');
             return;
@@ -145,16 +162,13 @@ function Message() {
                 content: inputMessage.trim(),
                 timestamp: new Date().toISOString()
             };
-
             stompClient.send(
                 `/app/chat/${auth.id}/${userId}`,
                 {},
                 JSON.stringify(messageData)
             );
-
             setInputMessage('');
         } catch (error) {
-            console.error('Error sending message:', error);
             setError('Không thể gửi tin nhắn');
         }
     };
@@ -167,10 +181,13 @@ function Message() {
         }
     };
 
+
     if (!auth) {
-        return <div className="flex justify-center items-center h-screen">
-            <Alert severity="error">Vui lòng đăng nhập để sử dụng tính năng chat</Alert>
-        </div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Alert severity="error">Vui lòng đăng nhập để sử dụng tính năng chat</Alert>
+            </div>
+        );
     }
 
     return (
@@ -224,7 +241,6 @@ function Message() {
                                         (msg.senderId === user.id && msg.receiverId === auth.id) ||
                                         (msg.senderId === auth.id && msg.receiverId === user.id)
                                     );
-
                                     return (
                                         <div
                                             key={user.id}
@@ -249,16 +265,14 @@ function Message() {
                                     );
                                 })
                             ) : (
-                                <p className='text-center text-gray-500 mt-4'>Không có người dùng nào</p>
+                                <p className='text-center text-gray-500 mt-4'>Không có người dùng nào. Hãy tìm kiếm để bắt đầu chat!</p>
                             )}
                         </div>
                     </div>
                 </Grid>
 
-                {/* Chat Section */}
                 <Grid item xs={12} md={9} className='h-full'>
                     <div className='flex flex-col h-full'>
-                        {/* Chat Header */}
                         <div className='flex justify-between items-center p-4 border-b'>
                             <div className='flex items-center space-x-3'>
                                 <Avatar
@@ -275,7 +289,6 @@ function Message() {
                             </div>
                         </div>
 
-                        {/* Messages Area */}
                         <div className='flex-1 overflow-y-auto hideScrollbar px-4 py-6'>
                             {isLoading ? (
                                 <div className="flex justify-center items-center h-full">
@@ -311,18 +324,21 @@ function Message() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Message Input */}
                         <div className='border-t p-4'>
                             <div className='flex items-center space-x-3'>
-                                <input
-                                    type="text"
-                                    className='flex-1 border border-gray-300 rounded-full py-3 px-5 focus:outline-none focus:border-blue-500'
-                                    placeholder='Nhập tin nhắn...'
-                                    value={inputMessage}
-                                    onChange={(e) => setInputMessage(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                                    disabled={!userId || isConnecting}
-                                />
+                                <Tooltip title={isConnecting ? 'Đang kết nối...' : !userId ? 'Vui lòng chọn người nhận' : ''}>
+                                    <span style={{ width: '100%' }} className={`flex items-center ${isConnecting || !userId ? 'pointer-events-none' : ''}`}>
+                                        <input
+                                            type="text"
+                                            className='flex-1 border border-gray-300 rounded-full py-3 px-5 focus:outline-none focus:border-blue-500'
+                                            placeholder='Nhập tin nhắn...'
+                                            value={inputMessage}
+                                            onChange={(e) => setInputMessage(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                            disabled={!userId || isConnecting}
+                                        />
+                                    </span>
+                                </Tooltip>
                                 <IconButton
                                     onClick={handleSendMessage}
                                     disabled={!inputMessage.trim() || !userId || isConnecting}

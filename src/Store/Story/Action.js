@@ -1,6 +1,7 @@
 import { api } from "../../config/api";
 import { CREATE_STORY_FAILURE, CREATE_STORY_SUCCESS, DELETE_STORY_FAILURE, DELETE_STORY_SUCCESS, GET_STORIES_FAILURE, GET_STORIES_SUCCESS, GET_STORY_FAILURE, GET_STORY_SUCCESS } from "./ActionType";
 
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
 
 export const createStory = ({ file, content }) => async (dispatch) => {
     try {
@@ -8,7 +9,7 @@ export const createStory = ({ file, content }) => async (dispatch) => {
         formData.append("file", file);
         formData.append("content", content);
 
-        const { data } = await api.post(`/api/story/create`, formData, {
+        const { data } = await api.post(`/${API_PREFIX}/story/create`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
@@ -24,7 +25,7 @@ export const createStory = ({ file, content }) => async (dispatch) => {
 
 export const getStoryById = (storyId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/story/${storyId}`);
+        const { data } = await api.get(`/${API_PREFIX}/story/${storyId}`);
         dispatch({ type: GET_STORY_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -34,7 +35,7 @@ export const getStoryById = (storyId) => async (dispatch) => {
 
 export const deleteStory = (storyId) => async (dispatch) => {
     try {
-        await api.delete(`/api/story/${storyId}`);
+        await api.delete(`/${API_PREFIX}/story/${storyId}`);
         console.log("Story deleted successfully");
         dispatch({ type: DELETE_STORY_SUCCESS, payload: storyId });
     } catch (error) {
@@ -45,7 +46,7 @@ export const deleteStory = (storyId) => async (dispatch) => {
 
 export const getStories = () => async (dispatch) => {
     try {
-        const response = await api.get(`/api/story`);
+        const response = await api.get(`/${API_PREFIX}/story`);
         dispatch({ type: GET_STORIES_SUCCESS, payload: response.data.data });
     } catch (error) {
         dispatch({ type: GET_STORIES_FAILURE, payload: error.message });

@@ -1,17 +1,16 @@
-import { Avatar, Button, IconButton, Paper, Typography, Box, CircularProgress, Tooltip, Fade } from '@mui/material';
-import { useFormik } from 'formik';
-import React, { useEffect, useState, useMemo } from 'react';
-import * as Yup from 'yup';
-import ImageIcon from '@mui/icons-material/Image';
-import FmdGoodIcon from '@mui/icons-material/FmdGood';
-import TagFacesIcon from '@mui/icons-material/TagFaces';
 import CloseIcon from '@mui/icons-material/Close';
-import PostCard from './PostCard';
-import StorySlider from '../StorySlider/StorySlider';
+import FmdGoodIcon from '@mui/icons-material/FmdGood';
+import ImageIcon from '@mui/icons-material/Image';
+import TagFacesIcon from '@mui/icons-material/TagFaces';
+import { Avatar, Box, Button, CircularProgress, Fade, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { useFormik } from 'formik';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Yup from 'yup';
 import { createPost, findPostsByLikeContainUser, getAllPosts } from '../../Store/Post/Action';
-import PropTypes from 'prop-types';
 import { PostSkeleton } from '../Common/LoadingStates';
+import StorySlider from '../StorySlider/StorySlider';
+import PostCard from './PostCard';
 
 const POST_VALIDATION_SCHEMA = Yup.object({
     content: Yup.string()

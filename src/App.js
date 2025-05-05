@@ -30,7 +30,6 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log(jwt);
     if (jwt && !auth.user) {
       dispatch(getUserProfile(jwt)).finally(() => setLoading(false));
     } else {

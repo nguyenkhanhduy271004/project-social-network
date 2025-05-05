@@ -2,6 +2,8 @@ import axios from "axios"
 import { api, API_BASE_URL } from "../../config/api"
 import { FIND_USER_BY_ID_FAILURE, FIND_USER_BY_ID_SUCCESS, FOLLOW_USER_FAILURE, FOLLOW_USER_SUCCESS, GET_RANDOM_USER_FAILURE, GET_RANDOM_USER_SUCCESS, GET_USER_PROFILE_USER_FAILURE, GET_USER_PROFILE_USER_SUCCESS, LOGIN_USER_FAILURE, LOGIN_USER_REQUEST, LOGIN_USER_SUCCESS, LOGOUT, REGISTER_USER_FAILURE, REGISTER_USER_SUCCESS, SEARCH_USERS_FAILURE, SEARCH_USERS_SUCCESS, UPDATE_USER_FAILURE, UPDATE_USER_SUCCESS } from "./ActionType";
 
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
+
 export const googleLogin = (credential) => async (dispatch) => {
     try {
         dispatch({ type: LOGIN_USER_REQUEST });
@@ -65,13 +67,12 @@ export const registerUser = (registerData) => async (dispatch) => {
 
 export const getUserProfile = (jwt) => async (dispatch) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/user/profile`, {
+        const response = await axios.get(`${API_BASE_URL}/${API_PREFIX}/user/profile`, {
             headers: {
                 "Authorization": `Bearer ${jwt}`
             }
         });
 
-        console.log(response.data.data);
 
         dispatch({ type: GET_USER_PROFILE_USER_SUCCESS, payload: response.data.data });
     } catch (error) {
@@ -82,8 +83,7 @@ export const getUserProfile = (jwt) => async (dispatch) => {
 
 export const findUserById = (userId) => async (dispatch) => {
     try {
-        const response = await api.get(`/api/user/${userId}`);
-
+        const response = await api.get(`/${API_PREFIX}/user/${userId}`);
         dispatch({ type: FIND_USER_BY_ID_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
@@ -93,7 +93,7 @@ export const findUserById = (userId) => async (dispatch) => {
 
 export const updateUserProfile = (reqData) => async (dispatch) => {
     try {
-        const { data } = await api.put(`/api/user/update`, reqData);
+        const { data } = await api.put(`/${API_PREFIX}/user/update`, reqData);
 
         dispatch({ type: UPDATE_USER_SUCCESS, payload: data });
     } catch (error) {
@@ -104,7 +104,7 @@ export const updateUserProfile = (reqData) => async (dispatch) => {
 
 export const followUser = (userId) => async (dispatch) => {
     try {
-        const { data } = await api.put(`/api/user/${userId}/follow`);
+        const { data } = await api.put(`/${API_PREFIX}/user/${userId}/follow`);
         dispatch({ type: FOLLOW_USER_SUCCESS, payload: { id: userId } });
     } catch (error) {
         console.log(error);
@@ -114,7 +114,7 @@ export const followUser = (userId) => async (dispatch) => {
 
 export const getRandomUser = () => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/user/random`);
+        const { data } = await api.get(`/${API_PREFIX}/user/random`);
 
         dispatch({ type: GET_RANDOM_USER_SUCCESS, payload: data.data });
     } catch (error) {
@@ -125,11 +125,36 @@ export const getRandomUser = () => async (dispatch) => {
 
 export const searchUsers = (query) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/user/search`, { params: { query } });
-        dispatch({ type: SEARCH_USERS_SUCCESS, payload: data });
+        // Determine if query is a user ID (number) or a search term
+        const isUserId = !isNaN(query) && String(parseInt(query)) === String(query);
+
+        let endpoint = '/${API_PREFIX}/user/search';
+        let params = { query };
+
+        // If it looks like a user ID, use the find user endpoint
+        if (isUserId) {
+            endpoint = `/${API_PREFIX}/user/${query}`;
+            params = {};
+        }
+
+        const { data } = await api.get(endpoint, { params });
+
+        // Handle response based on which endpoint was called
+        let users = [];
+        if (isUserId) {
+            // If we used findUserById, we need to wrap the single user in an array
+            users = data.data ? [data.data] : [];
+        } else {
+            // If we used the search endpoint, data should already be an array
+            users = data || [];
+        }
+
+        dispatch({ type: SEARCH_USERS_SUCCESS, payload: users });
+        return users; // Return users for use in components
     } catch (error) {
         console.log(error);
         dispatch({ type: SEARCH_USERS_FAILURE, payload: error.message });
+        return []; // Return empty array on error
     }
 };
 

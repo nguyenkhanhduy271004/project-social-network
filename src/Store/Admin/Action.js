@@ -39,11 +39,13 @@ import {
     DELETE_GROUP_FAILURE
 } from "./ActionType";
 
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
+
 // Dashboard metrics actions
 export const getDashboardMetrics = () => async (dispatch) => {
     try {
         dispatch(fetchDashboardRequest());
-        const { data } = await api.get("/api/admin/dashboard");
+        const { data } = await api.get(`/${API_PREFIX}/admin/dashboard`);
         dispatch(fetchDashboardSuccess(data.data));
     } catch (error) {
         console.error("Error fetching dashboard metrics:", error);
@@ -55,7 +57,7 @@ export const getDashboardMetrics = () => async (dispatch) => {
 export const getAllUsers = () => async (dispatch) => {
     dispatch({ type: ADMIN_REQUEST });
     try {
-        const { data } = await api.get('/api/admin/users');
+        const { data } = await api.get(`/${API_PREFIX}/admin/users`);
         dispatch({ type: GET_ALL_USERS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({ type: GET_ALL_USERS_FAILURE, payload: error.message });
@@ -64,7 +66,7 @@ export const getAllUsers = () => async (dispatch) => {
 
 export const updateUserAdminStatus = (userId, isAdmin) => async (dispatch) => {
     try {
-        const { data } = await api.put(`/api/admin/users/${userId}/admin-status?isAdmin=${isAdmin}`);
+        const { data } = await api.put(`/${API_PREFIX}/admin/users/${userId}/admin-status?isAdmin=${isAdmin}`);
         dispatch(updateUserAdminStatusSuccess(data.data));
         return data;
     } catch (error) {
@@ -75,7 +77,7 @@ export const updateUserAdminStatus = (userId, isAdmin) => async (dispatch) => {
 
 export const deleteUser = (userId) => async (dispatch) => {
     try {
-        await api.delete(`/api/admin/users/${userId}`);
+        await api.delete(`/${API_PREFIX}/admin/users/${userId}`);
         dispatch(deleteUserSuccess(userId));
     } catch (error) {
         console.error("Error deleting user:", error);
@@ -87,7 +89,7 @@ export const deleteUser = (userId) => async (dispatch) => {
 export const getAllPosts = () => async (dispatch) => {
     dispatch({ type: ADMIN_REQUEST });
     try {
-        const { data } = await api.get('/api/admin/posts');
+        const { data } = await api.get(`/${API_PREFIX}/admin/posts`);
         dispatch({ type: GET_ALL_POSTS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({ type: GET_ALL_POSTS_FAILURE, payload: error.message });
@@ -97,7 +99,7 @@ export const getAllPosts = () => async (dispatch) => {
 export const deletePost = (postId) => async (dispatch) => {
     dispatch({ type: ADMIN_REQUEST });
     try {
-        await api.delete(`/api/admin/posts/${postId}`);
+        await api.delete(`/${API_PREFIX}/admin/posts/${postId}`);
         dispatch({ type: DELETE_POST_SUCCESS, payload: postId });
     } catch (error) {
         dispatch({ type: DELETE_POST_FAILURE, payload: error.message });
@@ -108,7 +110,7 @@ export const deletePost = (postId) => async (dispatch) => {
 export const getAllStories = () => async (dispatch) => {
     try {
         dispatch(fetchStoriesRequest());
-        const { data } = await api.get("/api/admin/stories");
+        const { data } = await api.get(`/${API_PREFIX}/admin/stories`);
         dispatch(fetchStoriesSuccess(data.data));
     } catch (error) {
         console.error("Error fetching stories:", error);
@@ -118,7 +120,7 @@ export const getAllStories = () => async (dispatch) => {
 
 export const deleteStory = (storyId) => async (dispatch) => {
     try {
-        await api.delete(`/api/admin/stories/${storyId}`);
+        await api.delete(`/${API_PREFIX}/admin/stories/${storyId}`);
         dispatch(deleteStorySuccess(storyId));
     } catch (error) {
         console.error("Error deleting story:", error);
@@ -130,7 +132,7 @@ export const deleteStory = (storyId) => async (dispatch) => {
 export const getAllReels = () => async (dispatch) => {
     try {
         dispatch(fetchReelsRequest());
-        const { data } = await api.get("/api/admin/reels");
+        const { data } = await api.get(`/${API_PREFIX}/admin/reels`);
         console.log(data.data);
         dispatch(fetchReelsSuccess(data.data));
     } catch (error) {
@@ -141,7 +143,7 @@ export const getAllReels = () => async (dispatch) => {
 
 export const deleteReel = (reelId) => async (dispatch) => {
     try {
-        await api.delete(`/api/admin/reels/${reelId}`);
+        await api.delete(`/${API_PREFIX}/admin/reels/${reelId}`);
         dispatch(deleteReelSuccess(reelId));
     } catch (error) {
         console.error("Error deleting reel:", error);
@@ -153,7 +155,7 @@ export const deleteReel = (reelId) => async (dispatch) => {
 export const getAllGroups = () => async (dispatch) => {
     dispatch({ type: ADMIN_REQUEST });
     try {
-        const { data } = await api.get('/api/admin/groups');
+        const { data } = await api.get('/${API_PREFIX}/admin/groups');
         console.log('API response for groups:', data);
         dispatch({ type: GET_ALL_GROUPS_SUCCESS, payload: data.data || data });
     } catch (error) {
@@ -165,7 +167,7 @@ export const getAllGroups = () => async (dispatch) => {
 export const deleteGroup = (groupId) => async (dispatch) => {
     dispatch({ type: ADMIN_REQUEST });
     try {
-        await api.delete(`/api/admin/groups/${groupId}`);
+        await api.delete(`/${API_PREFIX}/admin/groups/${groupId}`);
         dispatch({ type: DELETE_GROUP_SUCCESS, payload: groupId });
     } catch (error) {
         dispatch({ type: DELETE_GROUP_FAILURE, payload: error.message });

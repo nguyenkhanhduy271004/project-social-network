@@ -56,17 +56,26 @@ function Navigation() {
 
     useEffect(() => {
         if (auth?.user) {
-            let url = API_BASE_URL + "/push-notifications/" + auth.user.id;
+            const url = `${API_BASE_URL}/push-notifications/${auth.user.id}`;
             const sse = new EventSource(url);
 
+            sse.onopen = () => {
+                console.log("Kết nối SSE thành công!");
+            };
+
             sse.addEventListener("user-list-event", (event) => {
-                const data = JSON.parse(event.data);
-                dispatch(addNotification({ newNotifs: data }));
+                try {
+                    const data = JSON.parse(event.data);
+                    dispatch(addNotification({ newNotifs: data }));
+                } catch (err) {
+                    console.error("Error parsing SSE data:", err);
+                }
             });
 
-            sse.onerror = () => {
-                sse.close();
+            sse.onerror = (err) => {
+                console.warn("Lỗi SSE hoặc đang reconnect:", err);
             };
+
             return () => {
                 sse.close();
             };

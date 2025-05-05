@@ -146,6 +146,14 @@ function Profile() {
         dispatch(followUser(userId));
     }
 
+    const handleMessageUser = () => {
+        if (user && user.id) {
+            navigate(`/message?newChat=${user.id}`);
+        } else {
+            navigate("/message");
+        }
+    };
+
     return (
         <Container maxWidth="md">
             <Paper
@@ -236,7 +244,7 @@ function Profile() {
                                             backgroundColor: isDarkMode ? 'primary.main' : 'primary.dark'
                                         }
                                     }}
-                                    onClick={() => navigate("/message")}
+                                    onClick={handleMessageUser}
                                 >
                                     Nhắn tin
                                 </Button>

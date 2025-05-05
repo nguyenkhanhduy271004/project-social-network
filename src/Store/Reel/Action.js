@@ -6,13 +6,14 @@ import {
     GET_REEL_FAILURE, GET_REEL_SUCCESS
 } from "./ActionType";
 
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || 'api/v1';
 export const createReel = ({ file, content }) => async (dispatch) => {
     try {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("content", content);
 
-        const { data } = await api.post(`/api/reel/create`, formData, {
+        const { data } = await api.post(`/${API_PREFIX}/reel/create`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
@@ -29,7 +30,7 @@ export const createReel = ({ file, content }) => async (dispatch) => {
 
 export const getReelById = (reelId) => async (dispatch) => {
     try {
-        const { data } = await api.get(`/api/reel/${reelId}`);
+        const { data } = await api.get(`/${API_PREFIX}/reel/${reelId}`);
         dispatch({ type: GET_REEL_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -39,7 +40,7 @@ export const getReelById = (reelId) => async (dispatch) => {
 
 export const deleteReel = (reelId) => async (dispatch) => {
     try {
-        await api.delete(`/api/reel/${reelId}`);
+        await api.delete(`/${API_PREFIX}/reel/${reelId}`);
         console.log("Reel deleted successfully");
         dispatch({ type: DELETE_REEL_SUCCESS, payload: reelId });
     } catch (error) {
@@ -50,7 +51,7 @@ export const deleteReel = (reelId) => async (dispatch) => {
 
 export const getReels = () => async (dispatch) => {
     try {
-        const response = await api.get(`/api/reel`);
+        const response = await api.get(`/${API_PREFIX}/reel`);
         dispatch({ type: GET_REELS_SUCCESS, payload: response.data.data });
     } catch (error) {
         dispatch({ type: GET_REELS_FAILURE, payload: error.message });
