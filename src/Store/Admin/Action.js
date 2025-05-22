@@ -155,9 +155,9 @@ export const deleteReel = (reelId) => async (dispatch) => {
 export const getAllGroups = () => async (dispatch) => {
     dispatch({ type: ADMIN_REQUEST });
     try {
-        const { data } = await api.get('/${API_PREFIX}/admin/groups');
-        console.log('API response for groups:', data);
-        dispatch({ type: GET_ALL_GROUPS_SUCCESS, payload: data.data || data });
+        const response = await api.get(`/${API_PREFIX}/admin/groups`);
+        console.log('API response for groups:', response.data.data);
+        dispatch({ type: GET_ALL_GROUPS_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.error("Error fetching groups:", error);
         dispatch({ type: GET_ALL_GROUPS_FAILURE, payload: error.message });

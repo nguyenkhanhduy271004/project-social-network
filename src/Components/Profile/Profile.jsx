@@ -337,22 +337,21 @@ function Profile() {
                                                 color: isDarkMode ? 'text.secondary' : 'text.secondary'
                                             }}
                                         >
-                                            Following
+                                            Followings
                                         </Typography>
                                     </Box>
                                     <Box
                                         sx={{
                                             cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             '&:hover': {
                                                 '& .MuiTypography-root': {
                                                     color: isDarkMode ? 'primary.main' : 'primary.main'
                                                 }
                                             }
                                         }}
-                                        onClick={() => {
-                                            console.log('Followers box clicked');
-                                            handleOpenFollowersModal();
-                                        }}
+                                        onClick={handleOpenFollowersModal}
                                     >
                                         <Typography component="span" sx={{ fontWeight: 'bold', mr: 0.5 }}>
                                             {user?.followers.length}
@@ -553,9 +552,26 @@ function Profile() {
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={openFollowingModal} onClose={handleCloseFollowingModal}>
-                <DialogTitle>Following List</DialogTitle>
-                <DialogContent>
+            <Dialog
+                open={openFollowingModal}
+                onClose={handleCloseFollowingModal}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        maxWidth: '400px',
+                        width: '100%',
+                        backgroundColor: isDarkMode ? 'background.paper' : 'white',
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    borderBottom: 1,
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'divider',
+                    pb: 2
+                }}>
+                    Following
+                </DialogTitle>
+                <DialogContent sx={{ p: 0 }}>
                     {followingList.length > 0 ? (
                         followingList.map((following) => (
                             <Box
@@ -564,21 +580,34 @@ function Profile() {
                                     display: 'flex',
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    py: 2,
+                                    p: 2,
                                     borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
                                     '&:last-child': {
                                         borderBottom: 'none'
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'
                                     }
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 2,
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => navigate(`/profile/${following.id}`)}
+                                >
                                     <Avatar
                                         src={following.image || "/default-avatar.png"}
                                         alt={following.fullName}
                                         sx={{ width: 40, height: 40 }}
                                     />
                                     <Box>
-                                        <Typography variant="subtitle1">{following.fullName}</Typography>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                                            {following.fullName}
+                                        </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             @{following.fullName?.split(' ').join('_').toLowerCase()}
                                         </Typography>
@@ -589,7 +618,12 @@ function Profile() {
                                         variant={following.followers?.some(f => f.id === auth.id) ? "outlined" : "contained"}
                                         size="small"
                                         onClick={() => handleFollowUser(following.id)}
-                                        sx={{ borderRadius: 6 }}
+                                        sx={{
+                                            borderRadius: 6,
+                                            minWidth: '100px',
+                                            textTransform: 'none',
+                                            fontWeight: 500
+                                        }}
                                     >
                                         {following.followers?.some(f => f.id === auth.id) ? "Following" : "Follow"}
                                     </Button>
@@ -597,28 +631,35 @@ function Profile() {
                             </Box>
                         ))
                     ) : (
-                        <Box sx={{ py: 3, textAlign: 'center' }}>
+                        <Box sx={{ py: 4, textAlign: 'center' }}>
                             <Typography color="text.secondary">
                                 Chưa theo dõi ai.
                             </Typography>
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseFollowingModal} color="primary">
-                        Đóng
-                    </Button>
-                </DialogActions>
             </Dialog>
 
             <Dialog
                 open={openFollowersModal}
                 onClose={handleCloseFollowersModal}
-                maxWidth="sm"
-                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        maxWidth: '400px',
+                        width: '100%',
+                        backgroundColor: isDarkMode ? 'background.paper' : 'white',
+                    }
+                }}
             >
-                <DialogTitle>Followers List</DialogTitle>
-                <DialogContent>
+                <DialogTitle sx={{
+                    borderBottom: 1,
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'divider',
+                    pb: 2
+                }}>
+                    Followers
+                </DialogTitle>
+                <DialogContent sx={{ p: 0 }}>
                     {followersList.length > 0 ? (
                         followersList.map((follower) => (
                             <Box
@@ -627,7 +668,7 @@ function Profile() {
                                     display: 'flex',
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    py: 2,
+                                    p: 2,
                                     borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
                                     '&:last-child': {
                                         borderBottom: 'none'
@@ -652,7 +693,9 @@ function Profile() {
                                         sx={{ width: 40, height: 40 }}
                                     />
                                     <Box>
-                                        <Typography variant="subtitle1">{follower.fullName}</Typography>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                                            {follower.fullName}
+                                        </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             @{follower.fullName?.split(' ').join('_').toLowerCase()}
                                         </Typography>
@@ -662,13 +705,12 @@ function Profile() {
                                     <Button
                                         variant={follower.followers?.some(f => f.id === auth.id) ? "outlined" : "contained"}
                                         size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleFollowUser(follower.id);
-                                        }}
+                                        onClick={() => handleFollowUser(follower.id)}
                                         sx={{
                                             borderRadius: 6,
-                                            minWidth: '100px'
+                                            minWidth: '100px',
+                                            textTransform: 'none',
+                                            fontWeight: 500
                                         }}
                                     >
                                         {follower.followers?.some(f => f.id === auth.id) ? "Following" : "Follow"}
@@ -677,18 +719,13 @@ function Profile() {
                             </Box>
                         ))
                     ) : (
-                        <Box sx={{ py: 3, textAlign: 'center' }}>
+                        <Box sx={{ py: 4, textAlign: 'center' }}>
                             <Typography color="text.secondary">
                                 Chưa có người theo dõi nào.
                             </Typography>
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseFollowersModal} color="primary">
-                        Đóng
-                    </Button>
-                </DialogActions>
             </Dialog>
 
         </Container>

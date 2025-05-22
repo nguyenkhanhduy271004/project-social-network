@@ -20,6 +20,7 @@ import AdminPosts from './AdminPosts';
 import AdminStories from './AdminStories';
 import AdminReels from './AdminReels';
 import AdminGroups from './AdminGroups';
+import AdminAIChat from './AdminAIChat';
 import PeopleIcon from '@mui/icons-material/People';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import BarChartIcon from '@mui/icons-material/BarChart';
@@ -28,6 +29,7 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import MovieIcon from '@mui/icons-material/Movie';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { useNavigate } from 'react-router-dom';
 
 const StyledTab = styled(Tab)(({ theme }) => ({
@@ -220,6 +222,8 @@ const AdminDashboard = () => {
                 return <AdminReels />;
             case 5:
                 return <AdminGroups />;
+            case 6:
+                return <AdminAIChat />;
             default:
                 return null;
         }
@@ -263,6 +267,7 @@ const AdminDashboard = () => {
                     <StyledTab label="Stories" icon={<AutoStoriesIcon />} iconPosition="start" />
                     <StyledTab label="Reels" icon={<MovieIcon />} iconPosition="start" />
                     <StyledTab label="Nhóm" icon={<GroupsIcon />} iconPosition="start" />
+                    <StyledTab label="AI Chat" icon={<SmartToyIcon />} iconPosition="start" />
                 </Tabs>
 
                 {renderTabContent()}

@@ -2,9 +2,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import FmdGoodIcon from '@mui/icons-material/FmdGood';
 import ImageIcon from '@mui/icons-material/Image';
 import TagFacesIcon from '@mui/icons-material/TagFaces';
-import { Avatar, Box, Button, CircularProgress, Fade, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Button, CircularProgress, Fade, IconButton, Paper, Tooltip, Typography, Zoom } from '@mui/material';
 import { useFormik } from 'formik';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 import { createPost, findPostsByLikeContainUser, getAllPosts } from '../../Store/Post/Action';
@@ -33,6 +33,7 @@ function HomeSection() {
     const [selectedImage, setSelectedImage] = useState(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
     const buttonStyles = useMemo(() => ({
         borderRadius: "25px",
@@ -52,6 +53,19 @@ function HomeSection() {
             bgcolor: '#90caf9',
             color: 'white'
         }
+    }), []);
+
+    const postFormStyles = useMemo(() => ({
+        p: 3,
+        mb: 4,
+        borderRadius: 2,
+        transition: 'all 0.3s ease',
+        '&:hover': {
+            boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+            transform: 'translateY(-2px)'
+        },
+        background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
+        border: '1px solid rgba(0,0,0,0.05)'
     }), []);
 
     useEffect(() => {
@@ -83,25 +97,31 @@ function HomeSection() {
         }
     });
 
-    const handleSelectImage = (event) => {
+    const handleSelectImage = useCallback((event) => {
         const imageFile = event.target.files[0];
         if (imageFile) {
+            setIsImageUploading(true);
             formik.setFieldValue("image", imageFile);
-            setSelectedImage(URL.createObjectURL(imageFile));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSelectedImage(reader.result);
+                setIsImageUploading(false);
+            };
+            reader.readAsDataURL(imageFile);
         }
-    };
+    }, [formik]);
 
-    const handleRemoveImage = () => {
+    const handleRemoveImage = useCallback(() => {
         setSelectedImage(null);
         formik.setFieldValue("image", null);
-    };
+    }, [formik]);
 
-    const handleAddEmoji = (emoji) => {
+    const handleAddEmoji = useCallback((emoji) => {
         formik.setFieldValue("content", formik.values.content + " " + emoji);
         setShowEmojiPicker(false);
-    };
+    }, [formik]);
 
-    const handleLocation = async () => {
+    const handleLocation = useCallback(async () => {
         try {
             const position = await getCurrentPosition();
             const { latitude, longitude } = position.coords;
@@ -112,15 +132,15 @@ function HomeSection() {
         } catch (error) {
             console.error("Error getting location:", error);
         }
-    };
+    }, [formik]);
 
-    const PostsSkeleton = () => (
+    const PostsSkeleton = useCallback(() => (
         <Box sx={{ width: '100%', mt: 4 }}>
             {[1, 2, 3].map((i) => (
                 <PostSkeleton key={i} />
             ))}
         </Box>
-    );
+    ), []);
 
     if (loading) {
         return <PostsSkeleton />;
@@ -128,16 +148,20 @@ function HomeSection() {
 
     return (
         <Box sx={{ maxWidth: '800px', mx: 'auto', p: { xs: 2, md: 4 } }}>
-            <Box sx={{ mb: 4 }}>
-                <StorySlider />
-            </Box>
+            <Zoom in={true} timeout={500}>
+                <Box sx={{ mb: 4 }}>
+                    <StorySlider />
+                </Box>
+            </Zoom>
 
             <Typography
                 variant="h5"
                 sx={{
                     mb: 4,
                     fontWeight: 600,
-                    color: '#1e88e5',
+                    background: 'linear-gradient(45deg, #1e88e5, #1565c0)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
                     borderBottom: '2px solid #e3f2fd',
                     pb: 2
                 }}
@@ -145,18 +169,7 @@ function HomeSection() {
                 Chia sẻ điều gì đó
             </Typography>
 
-            <Paper
-                elevation={2}
-                sx={{
-                    p: 3,
-                    mb: 4,
-                    borderRadius: 2,
-                    transition: 'box-shadow 0.3s ease',
-                    '&:hover': {
-                        boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
-                    }
-                }}
-            >
+            <Paper elevation={2} sx={postFormStyles}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Avatar
                         alt={user?.fullName || 'User'}
@@ -164,7 +177,11 @@ function HomeSection() {
                         sx={{
                             width: 48,
                             height: 48,
-                            border: '2px solid #e3f2fd'
+                            border: '2px solid #e3f2fd',
+                            transition: 'transform 0.2s ease',
+                            '&:hover': {
+                                transform: 'scale(1.1)'
+                            }
                         }}
                     />
                     <Box sx={{ flex: 1 }}>
@@ -200,41 +217,43 @@ function HomeSection() {
                             )}
 
                             {selectedImage && (
-                                <Box
-                                    sx={{
-                                        mt: 2,
-                                        position: 'relative',
-                                        display: 'inline-block'
-                                    }}
-                                >
-                                    <img
-                                        src={selectedImage}
-                                        alt="Selected"
-                                        style={{
-                                            maxWidth: '300px',
-                                            maxHeight: '300px',
-                                            objectFit: 'cover',
-                                            borderRadius: '8px',
-                                            border: '1px solid #e0e0e0'
-                                        }}
-                                    />
-                                    <IconButton
-                                        size="small"
-                                        onClick={handleRemoveImage}
+                                <Fade in={true}>
+                                    <Box
                                         sx={{
-                                            position: 'absolute',
-                                            top: 8,
-                                            right: 8,
-                                            bgcolor: 'rgba(0,0,0,0.6)',
-                                            color: 'white',
-                                            '&:hover': {
-                                                bgcolor: 'rgba(0,0,0,0.8)'
-                                            }
+                                            mt: 2,
+                                            position: 'relative',
+                                            display: 'inline-block'
                                         }}
                                     >
-                                        <CloseIcon fontSize="small" />
-                                    </IconButton>
-                                </Box>
+                                        <img
+                                            src={selectedImage}
+                                            alt="Selected"
+                                            style={{
+                                                maxWidth: '300px',
+                                                maxHeight: '300px',
+                                                objectFit: 'cover',
+                                                borderRadius: '8px',
+                                                border: '1px solid #e0e0e0'
+                                            }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            onClick={handleRemoveImage}
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 8,
+                                                right: 8,
+                                                bgcolor: 'rgba(0,0,0,0.6)',
+                                                color: 'white',
+                                                '&:hover': {
+                                                    bgcolor: 'rgba(0,0,0,0.8)'
+                                                }
+                                            }}
+                                        >
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                </Fade>
                             )}
 
                             <Box sx={{
@@ -254,14 +273,21 @@ function HomeSection() {
                                             />
                                             <IconButton
                                                 component="span"
+                                                disabled={isImageUploading}
                                                 sx={{
                                                     color: '#1e88e5',
                                                     '&:hover': {
-                                                        bgcolor: 'rgba(30,136,229,0.1)'
-                                                    }
+                                                        bgcolor: 'rgba(30,136,229,0.1)',
+                                                        transform: 'scale(1.1)'
+                                                    },
+                                                    transition: 'all 0.2s ease'
                                                 }}
                                             >
-                                                <ImageIcon />
+                                                {isImageUploading ? (
+                                                    <CircularProgress size={24} />
+                                                ) : (
+                                                    <ImageIcon />
+                                                )}
                                             </IconButton>
                                         </label>
                                     </Tooltip>
@@ -272,8 +298,10 @@ function HomeSection() {
                                             sx={{
                                                 color: '#1e88e5',
                                                 '&:hover': {
-                                                    bgcolor: 'rgba(30,136,229,0.1)'
-                                                }
+                                                    bgcolor: 'rgba(30,136,229,0.1)',
+                                                    transform: 'scale(1.1)'
+                                                },
+                                                transition: 'all 0.2s ease'
                                             }}
                                         >
                                             <FmdGoodIcon />
@@ -287,8 +315,10 @@ function HomeSection() {
                                                 sx={{
                                                     color: '#1e88e5',
                                                     '&:hover': {
-                                                        bgcolor: 'rgba(30,136,229,0.1)'
-                                                    }
+                                                        bgcolor: 'rgba(30,136,229,0.1)',
+                                                        transform: 'scale(1.1)'
+                                                    },
+                                                    transition: 'all 0.2s ease'
                                                 }}
                                             >
                                                 <TagFacesIcon />
@@ -307,7 +337,9 @@ function HomeSection() {
                                                     gridTemplateColumns: 'repeat(5, 1fr)',
                                                     gap: 0.5,
                                                     zIndex: 1000,
-                                                    boxShadow: 3
+                                                    boxShadow: 3,
+                                                    background: 'rgba(255, 255, 255, 0.95)',
+                                                    backdropFilter: 'blur(10px)'
                                                 }}
                                             >
                                                 {EMOJIS.map((emoji) => (
@@ -368,7 +400,11 @@ function HomeSection() {
                 ) : (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {posts.map((post) => (
-                            <PostCard key={post.id} post={post} />
+                            <Zoom in={true} key={post.id}>
+                                <Box>
+                                    <PostCard post={post} />
+                                </Box>
+                            </Zoom>
                         ))}
                     </Box>
                 )}
@@ -391,4 +427,4 @@ HomeSection.propTypes = {
     // Add your prop types here
 };
 
-export default HomeSection;
+export default React.memo(HomeSection);

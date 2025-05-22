@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import Account from './Components/Account/Account';
 import AdminDashboard from './Components/Admin/AdminDashboard';
+import AdminAIChatPage from './Pages/AdminAIChatPage';
 import Authentication from './Components/Authentication/Authentication';
 import ForgotPassword from './Components/Authentication/ForgotPassword';
 import { GlobalLoading } from './Components/Common/LoadingStates';
@@ -15,6 +16,7 @@ import HomePage from './Components/HomePage/HomePage';
 import Message from './Components/Message/Message';
 import Profile from './Components/Profile/Profile';
 import Reel from './Components/Reel/Reel';
+import Chat from './Components/Chat/Chat';
 import { getUserProfile } from './Store/Auth/Action';
 import { ThemeProvider } from './theme/ThemeContext';
 import { gapi } from 'gapi-script';
@@ -65,11 +67,20 @@ function App() {
         <Route path="/groups/:id" element={<GroupDetail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/groups/:groupId" element={<GroupPage />} />
+        <Route path="/chat" element={auth.user ? <Chat /> : <Navigate to="/login" />} />
         <Route
           path="/admin"
           element={
             auth.user && auth.user.admin
               ? <AdminDashboard />
+              : <Navigate to="/" />
+          }
+        />
+        <Route
+          path="/admin/ai-chat"
+          element={
+            auth.user && auth.user.admin
+              ? <AdminAIChatPage />
               : <Navigate to="/" />
           }
         />

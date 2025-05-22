@@ -10,6 +10,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PendingIcon from "@mui/icons-material/Pending";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 // Create a separate component for the notification badge
 const NotificationBadge = () => {
@@ -94,6 +95,11 @@ export const navigationMenu = [
         icon: <AdminPanelSettingsIcon />,
         path: '/admin',
         adminOnly: true
+    },
+    {
+        title: 'AI Chat',
+        icon: <SmartToyIcon />,
+        path: '/admin/ai-chat',
+        adminOnly: true
     }
-
 ];   

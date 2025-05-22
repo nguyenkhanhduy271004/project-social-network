@@ -47,7 +47,7 @@ export const createPost = (postData) => async (dispatch) => {
         formData.append("file", postData.file);
         formData.append("content", postData.content);
 
-        const { data } = await api.post(`/${API_PREFIX}/posts/create`, formData, {
+        const { data } = await api.post(`/${API_PREFIX}/posts`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,

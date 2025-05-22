@@ -13,7 +13,8 @@ import TabPanel from '@mui/lab/TabPanel';
 import PostCard from '../HomeSection/PostCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRepost, getUsersPost } from '../../Store/Post/Action';
-import { updateUserProfile } from '../../Store/Auth/Action';
+import { updateUserProfile, followUser } from '../../Store/Auth/Action';
+import { Typography } from '@mui/material';
 
 function Account() {
     const navigate = useNavigate();
@@ -23,8 +24,10 @@ function Account() {
     const [openPostModal, setOpenPostModal] = useState(false);
     const [openProfileModal, setOpenProfileModal] = useState(false);
     const [openFollowingModal, setOpenFollowingModal] = useState(false);
-    const rePosts = useSelector(store => store.post.rePost);
+    const [openFollowersModal, setOpenFollowersModal] = useState(false);
     const [followingList, setFollowingList] = useState([]);
+    const [followersList, setFollowersList] = useState([]);
+    const rePosts = useSelector(store => store.post.rePost);
     const [formData, setFormData] = useState({
         fullName: auth.user?.fullName || '',
         location: auth.user?.location || '',
@@ -62,6 +65,17 @@ function Account() {
         setOpenFollowingModal(true);
     };
     const handleCloseFollowingModal = () => setOpenFollowingModal(false);
+
+    const handleOpenFollowersModal = () => {
+        setFollowersList(auth.user?.followers || []);
+        setOpenFollowersModal(true);
+    };
+
+    const handleCloseFollowersModal = () => setOpenFollowersModal(false);
+
+    const handleFollowUser = (userId) => {
+        dispatch(followUser(userId));
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -108,11 +122,16 @@ function Account() {
                     <div className="flex items-center space-x-5">
                         <div className="flex items-center space-x-1 font-semibold">
                             <span>{auth.user?.following.length}</span>
-                            <span className="text-gray-500 cursor-pointer" onClick={handleOpenFollowingModal}>Following</span>
+                            <span className="text-gray-500 cursor-pointer" onClick={handleOpenFollowingModal}>Followings</span>
                         </div>
                         <div className="flex items-center space-x-1 font-semibold">
                             <span>{auth.user?.followers.length}</span>
-                            <span className="text-gray-500">Followers</span>
+                            <span
+                                className="text-gray-500 cursor-pointer hover:text-blue-500"
+                                onClick={handleOpenFollowersModal}
+                            >
+                                Followers
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -164,19 +183,178 @@ function Account() {
                 <DialogActions><Button onClick={handleClosePostModal} color="primary">Close</Button></DialogActions>
             </Dialog>
 
-            <Dialog open={openFollowingModal} onClose={handleCloseFollowingModal}>
-                <DialogTitle>Following List</DialogTitle>
-                <DialogContent>
-                    {followingList.length > 0 ? followingList.map((user, index) => (
-                        <div key={index} className="flex justify-between items-center py-2">
-                            <div className="flex items-center" onClick={() => navigate(`/profile/${user.id}`)}>
-                                <Avatar alt={user.name} src={user.avatar} />
-                                <span className="ml-3">{user.fullName}</span>
-                            </div>
-                        </div>
-                    )) : <p className="text-gray-500">You are not following anyone yet.</p>}
+            <Dialog
+                open={openFollowingModal}
+                onClose={handleCloseFollowingModal}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        maxWidth: '400px',
+                        width: '100%'
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    pb: 2
+                }}>
+                    Following
+                </DialogTitle>
+                <DialogContent sx={{ p: 0 }}>
+                    {followingList.length > 0 ? (
+                        followingList.map((following) => (
+                            <Box
+                                key={following.id}
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    p: 2,
+                                    borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                    '&:last-child': {
+                                        borderBottom: 'none'
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                                    }
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 2,
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => navigate(`/profile/${following.id}`)}
+                                >
+                                    <Avatar
+                                        src={following.image || "/default-avatar.png"}
+                                        alt={following.fullName}
+                                        sx={{ width: 40, height: 40 }}
+                                    />
+                                    <Box>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                                            {following.fullName}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            @{following.fullName?.split(' ').join('_').toLowerCase()}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                {auth.user.id !== following.id && (
+                                    <Button
+                                        variant={following.followers?.some(f => f.id === auth.user.id) ? "outlined" : "contained"}
+                                        size="small"
+                                        onClick={() => handleFollowUser(following.id)}
+                                        sx={{
+                                            borderRadius: 6,
+                                            minWidth: '100px',
+                                            textTransform: 'none',
+                                            fontWeight: 500
+                                        }}
+                                    >
+                                        {following.followers?.some(f => f.id === auth.user.id) ? "Following" : "Follow"}
+                                    </Button>
+                                )}
+                            </Box>
+                        ))
+                    ) : (
+                        <Box sx={{ py: 4, textAlign: 'center' }}>
+                            <Typography color="text.secondary">
+                                Chưa theo dõi ai.
+                            </Typography>
+                        </Box>
+                    )}
                 </DialogContent>
-                <DialogActions><Button onClick={handleCloseFollowingModal} color="primary">Close</Button></DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={openFollowersModal}
+                onClose={handleCloseFollowersModal}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        maxWidth: '400px',
+                        width: '100%'
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    pb: 2
+                }}>
+                    Followers
+                </DialogTitle>
+                <DialogContent sx={{ p: 0 }}>
+                    {followersList.length > 0 ? (
+                        followersList.map((follower) => (
+                            <Box
+                                key={follower.id}
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    p: 2,
+                                    borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                    '&:last-child': {
+                                        borderBottom: 'none'
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                                    }
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 2,
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => navigate(`/profile/${follower.id}`)}
+                                >
+                                    <Avatar
+                                        src={follower.image || "/default-avatar.png"}
+                                        alt={follower.fullName}
+                                        sx={{ width: 40, height: 40 }}
+                                    />
+                                    <Box>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                                            {follower.fullName}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            @{follower.fullName?.split(' ').join('_').toLowerCase()}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                {auth.user.id !== follower.id && (
+                                    <Button
+                                        variant={follower.followers?.some(f => f.id === auth.user.id) ? "outlined" : "contained"}
+                                        size="small"
+                                        onClick={() => handleFollowUser(follower.id)}
+                                        sx={{
+                                            borderRadius: 6,
+                                            minWidth: '100px',
+                                            textTransform: 'none',
+                                            fontWeight: 500
+                                        }}
+                                    >
+                                        {follower.followers?.some(f => f.id === auth.user.id) ? "Following" : "Follow"}
+                                    </Button>
+                                )}
+                            </Box>
+                        ))
+                    ) : (
+                        <Box sx={{ py: 4, textAlign: 'center' }}>
+                            <Typography color="text.secondary">
+                                Chưa có người theo dõi nào.
+                            </Typography>
+                        </Box>
+                    )}
+                </DialogContent>
             </Dialog>
         </div>
     );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Avatar, Button, Menu, MenuItem, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Box, Typography, Snackbar, Alert, CircularProgress } from '@mui/material';
+import { Avatar, Button, Menu, MenuItem, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Box, Typography, Snackbar, Alert, CircularProgress, Fade, Zoom } from '@mui/material';
 import { MoreHoriz, Send, Edit, Delete } from '@mui/icons-material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -176,6 +176,53 @@ function PostCard({ post }) {
         }
     };
 
+    const cardStyles = useMemo(() => ({
+        p: 3,
+        mb: 3,
+        borderRadius: 2,
+        backgroundColor: isDarkMode ? 'background.paper' : 'white',
+        border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
+        color: isDarkMode ? 'text.primary' : 'inherit',
+        '&:hover': {
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'inherit',
+            boxShadow: isDarkMode ? '0 0 10px rgba(255, 255, 255, 0.1)' : 'inherit',
+            transform: 'translateY(-2px)'
+        },
+        transition: 'all 0.3s ease'
+    }), [isDarkMode]);
+
+    const avatarStyles = useMemo(() => ({
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease',
+        '&:hover': {
+            transform: 'scale(1.1)'
+        }
+    }), []);
+
+    const actionButtonStyles = useMemo(() => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            transform: 'scale(1.1)'
+        }
+    }), []);
+
+    const commentStyles = useMemo(() => ({
+        display: 'flex',
+        gap: 2,
+        mb: 2,
+        p: 2,
+        borderRadius: 2,
+        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'grey.100',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'grey.200'
+        }
+    }), [isDarkMode]);
+
     if (error) {
         return (
             <ErrorDisplay
@@ -186,27 +233,12 @@ function PostCard({ post }) {
     }
 
     return (
-        <Paper
-            elevation={3}
-            sx={{
-                p: 3,
-                mb: 3,
-                borderRadius: 2,
-                backgroundColor: isDarkMode ? 'background.paper' : 'white',
-                border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
-                color: isDarkMode ? 'text.primary' : 'inherit',
-                '&:hover': {
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'inherit',
-                    boxShadow: isDarkMode ? '0 0 10px rgba(255, 255, 255, 0.1)' : 'inherit'
-                },
-                transition: 'all 0.3s ease'
-            }}
-        >
+        <Paper elevation={3} sx={cardStyles}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                 <Avatar
                     onClick={() => navigate(`/profile/${post?.user?._id}`)}
                     src={post?.user?.image || PLACEHOLDER_IMAGE}
-                    sx={{ cursor: 'pointer' }}
+                    sx={avatarStyles}
                 />
                 <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -215,7 +247,8 @@ function PostCard({ post }) {
                                 variant="subtitle1"
                                 sx={{
                                     fontWeight: 600,
-                                    color: isDarkMode ? 'text.primary' : 'inherit'
+                                    color: isDarkMode ? 'text.primary' : 'inherit',
+                                    transition: 'color 0.2s ease'
                                 }}
                             >
                                 {post?.user?.fullName || DEFAULT_USERNAME}
@@ -223,13 +256,22 @@ function PostCard({ post }) {
                             <Typography
                                 variant="body2"
                                 sx={{
-                                    color: isDarkMode ? 'text.secondary' : 'text.secondary'
+                                    color: isDarkMode ? 'text.secondary' : 'text.secondary',
+                                    transition: 'color 0.2s ease'
                                 }}
                             >
                                 @{formatUsername(post?.user?.fullName)} · 2m
                             </Typography>
                         </Box>
-                        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                        <IconButton
+                            onClick={(e) => setAnchorEl(e.currentTarget)}
+                            sx={{
+                                transition: 'transform 0.2s ease',
+                                '&:hover': {
+                                    transform: 'scale(1.1)'
+                                }
+                            }}
+                        >
                             <MoreHoriz sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />
                         </IconButton>
                     </Box>
@@ -239,31 +281,38 @@ function PostCard({ post }) {
                         sx={{
                             mb: 2,
                             color: isDarkMode ? 'text.primary' : 'inherit',
-                            whiteSpace: 'pre-wrap'
+                            whiteSpace: 'pre-wrap',
+                            transition: 'color 0.2s ease'
                         }}
                     >
                         {post?.content}
                     </Typography>
 
                     {post?.image && (
-                        <Box
-                            sx={{
-                                mb: 2,
-                                borderRadius: 2,
-                                overflow: 'hidden',
-                                border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : 'none'
-                            }}
-                        >
-                            <img
-                                src={post.image}
-                                alt="Post content"
-                                style={{
-                                    width: '100%',
-                                    height: 'auto',
-                                    display: 'block'
+                        <Fade in={true}>
+                            <Box
+                                sx={{
+                                    mb: 2,
+                                    borderRadius: 2,
+                                    overflow: 'hidden',
+                                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        transform: 'scale(1.02)'
+                                    }
                                 }}
-                            />
-                        </Box>
+                            >
+                                <img
+                                    src={post.image}
+                                    alt="Post content"
+                                    style={{
+                                        width: '100%',
+                                        height: 'auto',
+                                        display: 'block'
+                                    }}
+                                />
+                            </Box>
+                        </Fade>
                     )}
 
                     <Box
@@ -274,15 +323,7 @@ function PostCard({ post }) {
                         }}
                     >
                         <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                cursor: 'pointer',
-                                '&:hover': {
-                                    color: isDarkMode ? 'primary.main' : 'primary.main'
-                                }
-                            }}
+                            sx={actionButtonStyles}
                             onClick={() => setShowComments(!showComments)}
                         >
                             <ChatBubbleOutlineIcon fontSize="small" />
@@ -291,10 +332,7 @@ function PostCard({ post }) {
 
                         <Box
                             sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                cursor: 'pointer',
+                                ...actionButtonStyles,
                                 color: isLiked ? 'error.main' : 'inherit',
                                 '&:hover': {
                                     color: 'error.main'
@@ -307,15 +345,7 @@ function PostCard({ post }) {
                         </Box>
 
                         <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                cursor: 'pointer',
-                                '&:hover': {
-                                    color: isDarkMode ? 'primary.main' : 'primary.main'
-                                }
-                            }}
+                            sx={actionButtonStyles}
                             onClick={handleSharePost}
                         >
                             <RepeatIcon fontSize="small" />
@@ -323,76 +353,97 @@ function PostCard({ post }) {
                     </Box>
 
                     {showComments && (
-                        <Box sx={{ mt: 2 }}>
-                            {comments.map((comment, index) => (
-                                <Box
-                                    key={index}
-                                    sx={{
-                                        display: 'flex',
-                                        gap: 2,
-                                        mb: 2,
-                                        p: 2,
-                                        borderRadius: 2,
-                                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'grey.100'
-                                    }}
-                                >
-                                    <Avatar src={comment.user?.image || PLACEHOLDER_IMAGE} />
-                                    <Box sx={{ flex: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    color: isDarkMode ? 'text.primary' : 'inherit'
-                                                }}
-                                            >
-                                                {comment.user?.fullName || DEFAULT_USERNAME}
-                                            </Typography>
-                                            {comment.user?.id === user?.id && (
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={(e) => {
-                                                        setSelectedComment(comment);
-                                                        setCommentAnchorEl(e.currentTarget);
+                        <Fade in={true}>
+                            <Box sx={{ mt: 2 }}>
+                                {comments.map((comment, index) => (
+                                    <Box
+                                        key={index}
+                                        sx={commentStyles}
+                                    >
+                                        <Avatar
+                                            src={comment.user?.image || PLACEHOLDER_IMAGE}
+                                            sx={{
+                                                transition: 'transform 0.2s ease',
+                                                '&:hover': {
+                                                    transform: 'scale(1.1)'
+                                                }
+                                            }}
+                                        />
+                                        <Box sx={{ flex: 1 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: isDarkMode ? 'text.primary' : 'inherit',
+                                                        transition: 'color 0.2s ease'
                                                     }}
                                                 >
-                                                    <MoreHoriz sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />
-                                                </IconButton>
-                                            )}
+                                                    {comment.user?.fullName || DEFAULT_USERNAME}
+                                                </Typography>
+                                                {comment.user?.id === user?.id && (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={(e) => {
+                                                            setSelectedComment(comment);
+                                                            setCommentAnchorEl(e.currentTarget);
+                                                        }}
+                                                        sx={{
+                                                            transition: 'transform 0.2s ease',
+                                                            '&:hover': {
+                                                                transform: 'scale(1.1)'
+                                                            }
+                                                        }}
+                                                    >
+                                                        <MoreHoriz sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: isDarkMode ? 'text.primary' : 'inherit',
+                                                    transition: 'color 0.2s ease'
+                                                }}
+                                            >
+                                                {comment.content}
+                                            </Typography>
                                         </Box>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                color: isDarkMode ? 'text.primary' : 'inherit'
-                                            }}
-                                        >
-                                            {comment.content}
-                                        </Typography>
                                     </Box>
+                                ))}
+                                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        placeholder="Viết bình luận..."
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'inherit',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'inherit'
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <IconButton
+                                        onClick={handleCommentSubmit}
+                                        disabled={!comment.trim() || isLoading}
+                                        color="primary"
+                                        sx={{
+                                            transition: 'transform 0.2s ease',
+                                            '&:hover': {
+                                                transform: 'scale(1.1)'
+                                            }
+                                        }}
+                                    >
+                                        {isLoading ? <CircularProgress size={24} /> : <Send />}
+                                    </IconButton>
                                 </Box>
-                            ))}
-                            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    placeholder="Viết bình luận..."
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'inherit'
-                                        }
-                                    }}
-                                />
-                                <IconButton
-                                    onClick={handleCommentSubmit}
-                                    disabled={!comment.trim() || isLoading}
-                                    color="primary"
-                                >
-                                    <Send />
-                                </IconButton>
                             </Box>
-                        </Box>
+                        </Fade>
                     )}
                 </Box>
             </Box>

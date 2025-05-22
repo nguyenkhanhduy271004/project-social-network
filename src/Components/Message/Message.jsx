@@ -3,7 +3,7 @@ import SendIcon from '@mui/icons-material/Send';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import WestIcon from '@mui/icons-material/West';
 import { Alert, Avatar, CircularProgress, Grid, IconButton, Snackbar, Tooltip } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client';
@@ -13,6 +13,47 @@ import { findUserById, searchUsers } from '../../Store/Auth/Action';
 import { addMessage, getHistoryMessage, getUser, resetUnreadMessages } from '../../Store/Chat/Action';
 import { useLoading } from '../../utils/LoadingContext';
 import { MessageSkeleton } from '../Common/LoadingStates';
+import debounce from 'lodash/debounce';
+
+const UserListItem = React.memo(({ user, isSelected, lastMessage, unreadCount, onSelect, currentUserId }) => (
+    <div
+        className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
+        onClick={() => onSelect(user.id)}
+    >
+        <Avatar src={user.image || "/default-avatar.png"} alt={user.fullName} />
+        <div className="flex-1 min-w-0">
+            <p className="font-medium">{user.fullName}</p>
+            {lastMessage && (
+                <p className="text-sm text-gray-500 truncate">
+                    {lastMessage.senderId === currentUserId ? "Bạn: " : ""}{lastMessage.content}
+                </p>
+            )}
+        </div>
+        {unreadCount > 0 && (
+            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                {unreadCount}
+            </span>
+        )}
+    </div>
+));
+
+const MessageItem = React.memo(({ message, isSender, senderImage, receiverImage }) => (
+    <div className={`flex ${isSender ? 'justify-end' : 'justify-start'} mb-4`}>
+        <div className={`flex items-end space-x-2 ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
+            <Avatar
+                src={isSender ? senderImage : receiverImage}
+                alt={isSender ? "sender-avatar" : "receiver-avatar"}
+                sx={{ width: 32, height: 32 }}
+            />
+            <div className={`max-w-[70%] px-4 py-2 rounded-2xl ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}>
+                <p className="break-words">{message.content}</p>
+                <span className={`text-xs ${isSender ? 'text-blue-100' : 'text-gray-500'} block mt-1`}>
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                </span>
+            </div>
+        </div>
+    </div>
+));
 
 function Message() {
     const dispatch = useDispatch();
@@ -21,24 +62,151 @@ function Message() {
     const { showLoading, hideLoading } = useLoading();
 
     const auth = useSelector(state => state.auth.user);
-    const [users, setUsers] = useState(useSelector(state => state.chat.users) || []);
-    const searchResults = useSelector(state => state.auth.userSearch);
-    const messages = useSelector(state => state.chat.messages);
+    const chatUsers = useSelector(state => state.chat.users) || [];
+    const searchResults = useSelector(state => state.auth.userSearch) || [];
+    const messages = useSelector(state => state.chat.messages) || [];
     const findUser = useSelector(state => state.auth.findUser);
 
-    const loading = useSelector(state => state.chat.users);
-
+    const [users, setUsers] = useState(Array.isArray(chatUsers) ? chatUsers : []);
     const [inputMessage, setInputMessage] = useState('');
-    const [stompClient, setStompClient] = useState(null);
     const [userId, setUserId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [reconnectAttempts, setReconnectAttempts] = useState(0);
+    const MAX_RECONNECT_ATTEMPTS = 5;
+    const RECONNECT_DELAY = 5000;
 
+    const stompRef = useRef(null);
+    const subscriptionRef = useRef(null);
     const messagesEndRef = useRef(null);
-    const queryParams = new URLSearchParams(location.search);
+    const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
     const newUserId = queryParams.get("newChat");
+
+    useEffect(() => {
+        setUsers(Array.isArray(chatUsers) ? chatUsers : []);
+    }, [chatUsers]);
+
+    const setupWebSocket = useCallback(() => {
+        const jwt = localStorage.getItem('jwt');
+        if (!jwt) return;
+
+        try {
+            const sock = new SockJS(`${API_BASE_URL}/ws`);
+            const stomp = Stomp.over(sock);
+            stompRef.current = stomp;
+
+            stomp.connect(
+                { Authorization: `Bearer ${jwt}` },
+                () => {
+                    subscribeToMessages();
+                },
+                (error) => {
+                    console.error('WebSocket connection error:', error);
+                }
+            );
+        } catch (error) {
+            console.error('WebSocket setup error:', error);
+        }
+    }, []);
+
+    const subscribeToMessages = useCallback(() => {
+        if (!stompRef.current?.connected || !auth?.id) return;
+
+        if (subscriptionRef.current) {
+            subscriptionRef.current.unsubscribe();
+        }
+
+        subscriptionRef.current = stompRef.current.subscribe(
+            `/user/${auth.id}/private`,
+            (message) => {
+                try {
+                    const newMessage = JSON.parse(message.body);
+                    if (newMessage.senderId !== auth.id) {
+                        dispatch(addMessage(newMessage, auth.id, location.pathname));
+                    }
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                }
+            }
+        );
+    }, [auth?.id, dispatch, location.pathname]);
+
+    useEffect(() => {
+        setupWebSocket();
+        return () => {
+            if (subscriptionRef.current) {
+                subscriptionRef.current.unsubscribe();
+            }
+            if (stompRef.current?.connected) {
+                stompRef.current.disconnect();
+            }
+        };
+    }, [setupWebSocket]);
+
+    const handleSendMessage = useCallback(() => {
+        if (!userId || !inputMessage.trim()) {
+            return;
+        }
+
+        if (!stompRef.current?.connected) {
+            setError('Mất kết nối đến máy chủ chat. Đang thử kết nối lại...');
+            setupWebSocket();
+            return;
+        }
+
+        try {
+            const messageData = {
+                senderId: auth.id,
+                receiverId: userId,
+                content: inputMessage.trim(),
+                timestamp: new Date().toISOString()
+            };
+
+            stompRef.current.send(
+                `/app/chat/${auth.id}/${userId}`,
+                {},
+                JSON.stringify(messageData)
+            );
+
+            dispatch(addMessage(messageData, auth.id, location.pathname));
+            setInputMessage('');
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setError('Không thể gửi tin nhắn. Vui lòng thử lại.');
+        }
+    }, [userId, inputMessage, auth.id, dispatch, location.pathname, setupWebSocket]);
+
+    const debouncedSearch = useMemo(
+        () => debounce((query) => {
+            if (query.trim()) {
+                dispatch(searchUsers(query));
+            }
+        }, 300),
+        [dispatch]
+    );
+
+    const handleSearchChange = useCallback((e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        debouncedSearch(query);
+    }, [debouncedSearch]);
+
+    const filteredMessages = useMemo(() => {
+        if (!userId) return [];
+        return messages.filter(msg =>
+            (msg.senderId === userId && msg.receiverId === auth.id) ||
+            (msg.senderId === auth.id && msg.receiverId === userId)
+        );
+    }, [messages, userId, auth.id]);
+
+    const userList = useMemo(() => {
+        if (searchQuery && searchResults?.length) {
+            return searchResults;
+        }
+        return users;
+    }, [searchQuery, searchResults, users]);
 
     useEffect(() => {
         if (newUserId) {
@@ -49,92 +217,40 @@ function Message() {
 
     useEffect(() => {
         if (findUser?.id && !users.some(user => user.id === findUser.id)) {
-            setUsers([...users, { id: findUser.id, fullName: findUser.fullName, image: findUser.image }]);
+            setUsers(prev => [...prev, {
+                id: findUser.id,
+                fullName: findUser.fullName,
+                image: findUser.image
+            }]);
         }
     }, [findUser, users]);
 
-
     useEffect(() => {
-        if (auth) {
-            dispatch(getUser());
+        if (auth?.id) {
+            dispatch(getUser())
+                .catch(error => {
+                    console.error('Error fetching users:', error);
+                    setError('Không thể tải danh sách người dùng');
+                });
         }
-    }, [dispatch, auth]);
-
-
+    }, [auth?.id, dispatch]);
 
     useEffect(() => {
-        if (users?.length > 0 && !userId) {
+        if (users?.length > 0 && !userId && !newUserId) {
             setUserId(users[0].id);
         }
-    }, [users]);
+    }, [users, userId, newUserId]);
 
     useEffect(() => {
-        if (!auth) return;
-        const jwt = localStorage.getItem('jwt');
-        if (!jwt) {
-            setError('Không tìm thấy token xác thực');
-            return;
-        }
-
-        setIsConnecting(true);
-        showLoading('Connecting to chat server...');
-        const sock = new SockJS(`${API_BASE_URL}/ws`);
-        const stomp = Stomp.over(sock);
-        if (process.env.NODE_ENV !== 'production') {
-            stomp.debug = console.log;
-        }
-
-        const connect = (attempt = 1, maxAttempts = 3) => {
-            stomp.connect(
-                { Authorization: `Bearer ${jwt}` },
-                () => {
-                    setStompClient(stomp);
-                    setIsConnecting(false);
-                    setError('');
-                    hideLoading();
-                },
-                (error) => {
-                    if (attempt < maxAttempts) {
-                        setTimeout(() => connect(attempt + 1, maxAttempts), 2000);
-                    } else {
-                        setIsConnecting(false);
-                        setError('Không thể kết nối đến máy chủ chat');
-                        hideLoading();
-                    }
-                }
-            );
-        };
-
-        connect();
-
-        return () => {
-            if (stomp?.connected) {
-                stomp.disconnect();
-            }
-        };
-    }, [auth, showLoading, hideLoading]);
-
-    useEffect(() => {
-        if (userId && auth && !messages.some(msg => msg.receiverId === userId || msg.senderId === userId)) {
+        if (userId && auth?.id && !messages.some(msg =>
+            msg.receiverId === userId || msg.senderId === userId
+        )) {
             setIsLoading(true);
             dispatch(getHistoryMessage(userId))
                 .catch(() => setError('Không thể tải lịch sử tin nhắn'))
                 .finally(() => setIsLoading(false));
         }
-    }, [userId, auth, dispatch, messages]);
-
-    useEffect(() => {
-        if (stompClient?.connected && auth) {
-            const subscription = stompClient.subscribe(
-                `/user/${auth.id}/private`,
-                (message) => {
-                    const newMessage = JSON.parse(message.body);
-                    dispatch(addMessage(newMessage, auth.id, location.pathname));
-                }
-            );
-            return () => subscription.unsubscribe();
-        }
-    }, [stompClient, auth, dispatch, location.pathname]);
+    }, [userId, auth?.id, dispatch, messages]);
 
     useEffect(() => {
         if (userId && location.pathname.includes('/message')) {
@@ -146,41 +262,7 @@ function Message() {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages]);
-
-    const handleSendMessage = () => {
-        if (!userId || !inputMessage.trim()) return;
-        if (!stompClient?.connected) {
-            setError('Mất kết nối đến máy chủ chat');
-            return;
-        }
-
-        try {
-            const messageData = {
-                senderId: auth.id,
-                receiverId: userId,
-                content: inputMessage.trim(),
-                timestamp: new Date().toISOString()
-            };
-            stompClient.send(
-                `/app/chat/${auth.id}/${userId}`,
-                {},
-                JSON.stringify(messageData)
-            );
-            setInputMessage('');
-        } catch (error) {
-            setError('Không thể gửi tin nhắn');
-        }
-    };
-
-    const handleSearchChange = (e) => {
-        const query = e.target.value;
-        setSearchQuery(query);
-        if (query.trim()) {
-            dispatch(searchUsers(query));
-        }
-    };
-
+    }, [filteredMessages]);
 
     if (!auth) {
         return (
@@ -218,50 +300,31 @@ function Message() {
                                 className="w-full p-3 pr-10 border rounded-lg focus:outline-none focus:border-blue-500"
                                 value={searchQuery}
                                 onChange={handleSearchChange}
+                                style={{ color: 'white' }}
                             />
                         </div>
 
                         <div className='overflow-y-auto flex-1 hideScrollbar'>
-                            {isConnecting ? (
+                            {isConnecting && !userList.length ? (
                                 <MessageSkeleton />
-                            ) : searchQuery && searchResults?.length ? (
-                                searchResults.map((user) => (
-                                    <div
-                                        key={user.id}
-                                        className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${userId === user.id ? 'bg-blue-50' : ''}`}
-                                        onClick={() => setUserId(user.id)}
-                                    >
-                                        <Avatar src={user.image || "/default-avatar.png"} alt={user.fullName} />
-                                        <p className="font-medium">{user.fullName}</p>
-                                    </div>
-                                ))
-                            ) : users?.length ? (
-                                users.map((user) => {
-                                    const lastMessage = messages.find(msg =>
-                                        (msg.senderId === user.id && msg.receiverId === auth.id) ||
-                                        (msg.senderId === auth.id && msg.receiverId === user.id)
-                                    );
+                            ) : userList?.length ? (
+                                userList.map((user) => {
+                                    const lastMessage = messages
+                                        .filter(msg =>
+                                            (msg.senderId === user.id && msg.receiverId === auth.id) ||
+                                            (msg.senderId === auth.id && msg.receiverId === user.id)
+                                        )
+                                        .slice(-1)[0];
                                     return (
-                                        <div
+                                        <UserListItem
                                             key={user.id}
-                                            className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${userId === user.id ? 'bg-blue-50' : ''}`}
-                                            onClick={() => setUserId(user.id)}
-                                        >
-                                            <Avatar src={user.image || "/default-avatar.png"} alt={user.fullName} />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium">{user.fullName}</p>
-                                                {lastMessage && (
-                                                    <p className="text-sm text-gray-500 truncate">
-                                                        {lastMessage.senderId === auth.id ? "Bạn: " : ""}{lastMessage.content}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            {user.unreadCount > 0 && (
-                                                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                                    {user.unreadCount}
-                                                </span>
-                                            )}
-                                        </div>
+                                            user={user}
+                                            isSelected={userId === user.id}
+                                            lastMessage={lastMessage}
+                                            unreadCount={user.unreadCount || 0}
+                                            onSelect={setUserId}
+                                            currentUserId={auth.id}
+                                        />
                                     );
                                 })
                             ) : (
@@ -294,27 +357,16 @@ function Message() {
                                 <div className="flex justify-center items-center h-full">
                                     <CircularProgress />
                                 </div>
-                            ) : messages?.length > 0 ? (
-                                messages.map((message, index) => {
-                                    const isSender = message.senderId === auth.id;
-                                    return (
-                                        <div key={index} className={`flex ${isSender ? 'justify-end' : 'justify-start'} mb-4`}>
-                                            <div className={`flex items-end space-x-2 ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                <Avatar
-                                                    src={isSender ? auth.image || "/default-avatar.png" : users.find(u => u.id === message.senderId)?.image || "/default-avatar.png"}
-                                                    alt={isSender ? "sender-avatar" : "receiver-avatar"}
-                                                    sx={{ width: 32, height: 32 }}
-                                                />
-                                                <div className={`max-w-[70%] px-4 py-2 rounded-2xl ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}>
-                                                    <p className="break-words">{message.content}</p>
-                                                    <span className={`text-xs ${isSender ? 'text-blue-100' : 'text-gray-500'} block mt-1`}>
-                                                        {new Date(message.timestamp).toLocaleTimeString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })
+                            ) : filteredMessages.length > 0 ? (
+                                filteredMessages.map((message, index) => (
+                                    <MessageItem
+                                        key={`${message.timestamp}-${index}`}
+                                        message={message}
+                                        isSender={message.senderId === auth.id}
+                                        senderImage={auth.image || "/default-avatar.png"}
+                                        receiverImage={users.find(u => u.id === userId)?.image || "/default-avatar.png"}
+                                    />
+                                ))
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full text-gray-500">
                                     <p>Chưa có tin nhắn nào.</p>
@@ -327,7 +379,7 @@ function Message() {
                         <div className='border-t p-4'>
                             <div className='flex items-center space-x-3'>
                                 <Tooltip title={isConnecting ? 'Đang kết nối...' : !userId ? 'Vui lòng chọn người nhận' : ''}>
-                                    <span style={{ width: '100%' }} className={`flex items-center ${isConnecting || !userId ? 'pointer-events-none' : ''}`}>
+                                    <span className={`flex items-center ${isConnecting || !userId ? 'pointer-events-none' : ''}`}>
                                         <input
                                             type="text"
                                             className='flex-1 border border-gray-300 rounded-full py-3 px-5 focus:outline-none focus:border-blue-500'
@@ -336,6 +388,7 @@ function Message() {
                                             onChange={(e) => setInputMessage(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                                             disabled={!userId || isConnecting}
+                                            style={{ color: 'black' }}
                                         />
                                     </span>
                                 </Tooltip>
@@ -355,4 +408,4 @@ function Message() {
     );
 }
 
-export default Message;
+export default React.memo(Message);
