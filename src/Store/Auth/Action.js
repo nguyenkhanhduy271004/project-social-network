@@ -91,14 +91,30 @@ export const findUserById = (userId) => async (dispatch) => {
     }
 }
 
-export const updateUserProfile = (reqData) => async (dispatch) => {
+export const updateUserProfile = (formData) => async (dispatch) => {
     try {
-        const { data } = await api.put(`/${API_PREFIX}/user/update`, reqData);
+        const jwt = localStorage.getItem("jwt");
+        if (!jwt) {
+            throw new Error("No authentication token found");
+        }
 
-        dispatch({ type: UPDATE_USER_SUCCESS, payload: data });
+        const { data } = await api.put(`/${API_PREFIX}/user`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${jwt}`
+            }
+        });
+
+        if (data.status === 200) {
+            dispatch({ type: UPDATE_USER_SUCCESS, payload: data.data });
+            return data;
+        } else {
+            throw new Error(data.message || 'Failed to update profile');
+        }
     } catch (error) {
-        console.log(error);
+        console.error('Update profile error:', error);
         dispatch({ type: UPDATE_USER_FAILURE, payload: error.message });
+        throw error;
     }
 }
 

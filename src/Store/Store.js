@@ -6,7 +6,7 @@ import { chatReducer } from './Chat/Reducer';
 import { reelReducer } from './Reel/Reducer';
 import { groupReducer } from './Group/Reducer';
 import adminReducer from './Admin/Reducer';
-import deliveredNotifsReducer from './Notification/Reducer';
+import notificationReducer from './Notification/Reducer';
 
 export const store = configureStore({
     reducer: {
@@ -17,7 +17,7 @@ export const store = configureStore({
         reel: reelReducer,
         group: groupReducer,
         admin: adminReducer,
-        deliveredNotifs: deliveredNotifsReducer
+        notification: notificationReducer
     }
 });
 

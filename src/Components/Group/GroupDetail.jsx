@@ -54,6 +54,7 @@ function GroupDetail() {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
+
     const styles = useMemo(() => ({
         container: {
             maxWidth: '1200px',

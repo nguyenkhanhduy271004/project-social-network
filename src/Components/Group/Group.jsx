@@ -27,12 +27,15 @@ import {
     DialogContent,
     DialogActions,
     Snackbar,
-    Alert
+    Alert,
+    InputAdornment
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import GroupIcon from "@mui/icons-material/Group";
+import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../config/api";
+import PostCard from "../HomeSection/PostCard";
 
 const LoadingSkeleton = () => (
     <Box sx={{ width: '100%' }}>
@@ -61,6 +64,8 @@ const Groups = () => {
     const [selectedGroup, setSelectedGroup] = useState(null);
     const [joinRequestDialog, setJoinRequestDialog] = useState(false);
     const [joiningGroup, setJoiningGroup] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filteredGroups, setFilteredGroups] = useState([]);
 
     const navigate = useNavigate();
 
@@ -68,11 +73,13 @@ const Groups = () => {
         const fetchData = async () => {
             setLocalLoading(true);
             try {
+                console.log('Fetching data...');
                 await Promise.all([
                     dispatch(getGroups()),
                     dispatch(fetchUserGroups()),
                     dispatch(getPostsFromGroup())
                 ]);
+                console.log('Data fetched successfully');
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -82,6 +89,25 @@ const Groups = () => {
 
         fetchData();
     }, [dispatch]);
+
+    useEffect(() => {
+        if (searchQuery.trim() === "") {
+            setFilteredGroups(allGroups);
+        } else {
+            const filtered = allGroups.filter(group =>
+                group.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            setFilteredGroups(filtered);
+        }
+    }, [searchQuery, allGroups]);
+
+    useEffect(() => {
+        setFilteredGroups(allGroups);
+    }, [allGroups]);
+
+    useEffect(() => {
+        console.log('Current posts:', posts);
+    }, [posts]);
 
     useEffect(() => {
         const fetchPendingRequests = async () => {
@@ -135,7 +161,7 @@ const Groups = () => {
 
     const handleJoinRequest = async (groupId) => {
         try {
-            const response = await api.post(`/api/posts/${groupId}/request-join`);
+            const response = await api.post(`/api/v1/groups/${groupId}/request-join`);
             setJoinRequestStatus(prev => ({
                 ...prev,
                 [groupId]: 'pending'
@@ -158,13 +184,13 @@ const Groups = () => {
     const handleApproveRequest = async (groupId, userId, approve) => {
         try {
             if (approve) {
-                await api.post(`/api/groups/${groupId}/accept-request/${userId}`);
+                await api.post(`/api/v1/groups/${groupId}/accept-request/${userId}`);
             } else {
-                await api.post(`/api/groups/${groupId}/reject-request/${userId}`);
+                await api.post(`/api/v1/groups/${groupId}/reject-request/${userId}`);
             }
 
             // Refresh pending requests list
-            const response = await api.get(`/api/groups/${groupId}/pending-requests`);
+            const response = await api.get(`/api/v1/groups/${groupId}/pending-requests`);
             setPendingRequests(response.data.data);
 
             setSnackbar({
@@ -246,8 +272,10 @@ const Groups = () => {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Grid container spacing={3}>
+                {/* Left Column - Group Management */}
                 <Grid item xs={12} md={4}>
-                    <Card sx={{ mb: 3, borderRadius: 2 }}>
+                    {/* Create Group Card */}
+                    <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 2 }}>
                         <CardContent>
                             <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
                                 Tạo Nhóm Mới
@@ -294,7 +322,8 @@ const Groups = () => {
                         </CardContent>
                     </Card>
 
-                    <Card sx={{ borderRadius: 2 }}>
+                    {/* Joined Groups Card */}
+                    <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
                         <CardContent>
                             <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
                                 Nhóm Đã Tham Gia ({userGroups?.length || 0})
@@ -309,12 +338,16 @@ const Groups = () => {
                                     {userGroups.map((group) => (
                                         group && group.id && (
                                             <React.Fragment key={group.id}>
-                                                <ListItem sx={{
-                                                    px: 2,
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(0,0,0,0.04)'
-                                                    }
-                                                }}>
+                                                <ListItem
+                                                    sx={{
+                                                        px: 2,
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(0,0,0,0.04)',
+                                                            cursor: 'pointer'
+                                                        }
+                                                    }}
+                                                    onClick={() => navigate(`/groups/${group.id}`)}
+                                                >
                                                     <ListItemAvatar>
                                                         <Avatar sx={{ bgcolor: "#1a237e" }}>
                                                             <GroupIcon />
@@ -323,8 +356,6 @@ const Groups = () => {
                                                     <ListItemText
                                                         primary={group.name}
                                                         secondary={group.isPublic ? 'Công khai' : 'Riêng tư'}
-                                                        onClick={() => navigate(`/groups/${group.id}`)}
-                                                        sx={{ cursor: 'pointer' }}
                                                     />
                                                     {group.admin?.id === user?.id ? (
                                                         <Tooltip title="Quản lý yêu cầu">
@@ -332,7 +363,8 @@ const Groups = () => {
                                                                 size="small"
                                                                 variant="outlined"
                                                                 color="primary"
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
                                                                     setSelectedGroup(group);
                                                                     setJoinRequestDialog(true);
                                                                 }}
@@ -346,7 +378,10 @@ const Groups = () => {
                                                                 size="small"
                                                                 variant="outlined"
                                                                 color="error"
-                                                                onClick={() => handleLeaveGroup(group.id)}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleLeaveGroup(group.id);
+                                                                }}
                                                             >
                                                                 Rời nhóm
                                                             </Button>
@@ -363,8 +398,109 @@ const Groups = () => {
                     </Card>
                 </Grid>
 
+                {/* Right Column - Group Discovery and Posts */}
                 <Grid item xs={12} md={8}>
-                    <Card sx={{ borderRadius: 2 }}>
+                    {/* Group Search Card */}
+                    <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 2 }}>
+                        <CardContent>
+                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
+                                Khám Phá Nhóm
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                placeholder="Tìm kiếm nhóm..."
+                                variant="outlined"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{ mb: 3 }}
+                            />
+                            {filteredGroups.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', py: 3, color: 'text.secondary' }}>
+                                    <GroupIcon sx={{ fontSize: 40, mb: 1, opacity: 0.5 }} />
+                                    <Typography>
+                                        {searchQuery.trim() ? 'Không tìm thấy nhóm nào' : 'Chưa có nhóm nào'}
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <Grid container spacing={2}>
+                                    {filteredGroups.map((group) => (
+                                        <Grid item xs={12} key={group.id}>
+                                            <Card
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: 3,
+                                                        cursor: 'pointer'
+                                                    }
+                                                }}
+                                                onClick={() => navigate(`/groups/${group.id}`)}
+                                            >
+                                                <CardContent>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                        <Avatar sx={{ bgcolor: "#1a237e", width: 56, height: 56 }}>
+                                                            <GroupIcon />
+                                                        </Avatar>
+                                                        <Box sx={{ flex: 1 }}>
+                                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                                {group.name}
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {group.isPublic ? 'Công khai' : 'Riêng tư'}
+                                                                </Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {group.memberCount || 0} thành viên
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                        {!userGroups.some(g => g.id === group.id) && (
+                                                            <Button
+                                                                variant="contained"
+                                                                size="small"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleJoinGroup(group.id);
+                                                                }}
+                                                                disabled={joiningGroup === group.id || joinRequestStatus[group.id] === 'pending'}
+                                                                sx={{
+                                                                    borderRadius: 2,
+                                                                    textTransform: 'none',
+                                                                    bgcolor: '#1a237e',
+                                                                    '&:hover': {
+                                                                        bgcolor: '#0d1642'
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {joiningGroup === group.id ? (
+                                                                    <CircularProgress size={20} color="inherit" />
+                                                                ) : joinRequestStatus[group.id] === 'pending' ? (
+                                                                    'Đã gửi yêu cầu'
+                                                                ) : (
+                                                                    'Tham gia nhóm'
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Posts Card */}
+                    <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
                         <CardContent>
                             <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
                                 Bài Viết Từ Nhóm ({posts?.length || 0})
@@ -377,249 +513,106 @@ const Groups = () => {
                                 <Box display="flex" flexDirection="column" gap={2}>
                                     {posts.map((post) => {
                                         if (!post) return null;
+                                        const isOwner = post.user?.id === user?.id;
                                         const isJoined = Array.isArray(userGroups) &&
                                             post.groupId &&
                                             userGroups.some(group => group && group.id === post.groupId);
 
-                                        // Find the group this post belongs to
-                                        const postGroup = allGroups.find(g => g.id === post.groupId);
+                                        const postGroup = allGroups.find(group => group.id === post.groupId);
 
-                                        // Show post if:
-                                        // 1. Group is public, OR
-                                        // 2. User is a member of the group
-                                        const canViewPost = postGroup?.isPublic || isJoined;
-                                        if (!canViewPost) {
-                                            return null;
-                                        }
-
-                                        return (
-                                            <Card
-                                                key={post.id}
-                                                sx={{
-                                                    borderRadius: 2,
-                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                                    '&:hover': {
-                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
-                                                    },
-                                                    transition: 'box-shadow 0.3s ease'
-                                                }}
-                                            >
-                                                <CardContent>
-                                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                                                        <Box>
-                                                            <Typography
-                                                                variant="subtitle1"
-                                                                sx={{
-                                                                    color: "#1a237e",
-                                                                    fontWeight: 500,
-                                                                    cursor: 'pointer',
-                                                                    '&:hover': {
-                                                                        textDecoration: 'underline'
-                                                                    }
-                                                                }}
-                                                                onClick={() => post.groupId && navigate(`/groups/${post.groupId}`)}
-                                                            >
-                                                                {post.nameGroup || "Không có nhóm"}
-                                                                {postGroup && !postGroup.isPublic && (
-                                                                    <span style={{ marginLeft: '8px', fontSize: '0.8em', color: '#666' }}>
-                                                                        (Nhóm riêng tư)
-                                                                    </span>
-                                                                )}
-                                                            </Typography>
-                                                            {isJoined && (
-                                                                <Typography variant="caption" sx={{ color: 'success.main', display: 'block' }}>
-                                                                    Bạn đã tham gia nhóm này
-                                                                </Typography>
-                                                            )}
-                                                        </Box>
-                                                        {!isJoined && post.groupId && (
-                                                            <Button
-                                                                variant="contained"
-                                                                size="small"
-                                                                onClick={() => handleJoinGroup(post.groupId)}
-                                                                disabled={joiningGroup === post.groupId || joinRequestStatus[post.groupId] === 'pending'}
-                                                                sx={{
-                                                                    borderRadius: 2,
-                                                                    textTransform: 'none',
-                                                                    bgcolor: '#1a237e',
-                                                                    '&:hover': {
-                                                                        bgcolor: '#0d1642'
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {joiningGroup === post.groupId ? (
-                                                                    <CircularProgress size={20} color="inherit" />
-                                                                ) : joinRequestStatus[post.groupId] === 'pending' ? (
-                                                                    'Đã gửi yêu cầu'
-                                                                ) : (
-                                                                    'Tham gia nhóm'
-                                                                )}
-                                                            </Button>
-                                                        )}
-                                                    </Box>
-
-                                                    <Box display="flex" alignItems="center" gap={1.5} mb={2}>
-                                                        <Avatar sx={{ width: 40, height: 40, bgcolor: '#1a237e' }}>
-                                                            {post.user?.fullName?.charAt(0) || '?'}
-                                                        </Avatar>
-                                                        <Box>
-                                                            <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                                                                {post.user?.fullName || 'Unknown User'}
-                                                            </Typography>
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {post.createdAt ? new Date(post.createdAt).toLocaleDateString('vi-VN', {
-                                                                    year: 'numeric',
-                                                                    month: 'long',
-                                                                    day: 'numeric'
-                                                                }) : 'Unknown date'}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Box>
-
-                                                    <Typography variant="body1" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>
-                                                        {post.content || ''}
-                                                    </Typography>
-
-                                                    {post.image && (
-                                                        <Box mb={2}>
-                                                            <img
-                                                                src={post.image}
-                                                                alt="Post Image"
-                                                                style={{
-                                                                    width: "100%",
-                                                                    borderRadius: 8,
-                                                                    maxHeight: 500,
-                                                                    objectFit: 'cover'
-                                                                }}
-                                                                loading="lazy"
-                                                            />
-                                                        </Box>
-                                                    )}
-
-                                                    {post.video && (
-                                                        <Box mb={2}>
-                                                            <video
-                                                                width="100%"
-                                                                controls
-                                                                style={{ borderRadius: 8 }}
-                                                                preload="metadata"
-                                                            >
-                                                                <source src={post.video} type="video/mp4" />
-                                                                Trình duyệt của bạn không hỗ trợ video.
-                                                            </video>
-                                                        </Box>
-                                                    )}
-
-                                                    <Box
-                                                        display="flex"
-                                                        gap={3}
-                                                        sx={{
-                                                            color: "text.secondary",
-                                                            '& > div': {
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 0.5,
-                                                                cursor: 'pointer',
-                                                                '&:hover': {
-                                                                    color: '#1a237e'
-                                                                }
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Box>
-                                                            <span>❤️</span>
-                                                            <Typography>{post.totalLikes || 0} thích</Typography>
-                                                        </Box>
-                                                        <Box>
-                                                            <span>💬</span>
-                                                            <Typography>{post.totalComments || 0} bình luận</Typography>
-                                                        </Box>
-                                                        <Box>
-                                                            <span>🔁</span>
-                                                            <Typography>{post.totalReplies || 0} chia sẻ</Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </CardContent>
-                                            </Card>
-                                        );
+                                        return <PostCard
+                                            key={post.id}
+                                            post={{
+                                                ...post,
+                                                groupName: postGroup?.name || 'Không có nhóm',
+                                                groupId: post.groupId
+                                            }}
+                                            isOwner={isOwner}
+                                            isJoined={isJoined}
+                                            onJoinGroup={() => handleJoinGroup(post.groupId)}
+                                            joiningGroup={joiningGroup === post.groupId}
+                                            joinRequestStatus={joinRequestStatus[post.groupId]}
+                                        />;
                                     })}
                                 </Box>
                             )}
                         </CardContent>
                     </Card>
                 </Grid>
-
-                <Dialog
-                    open={joinRequestDialog}
-                    onClose={() => setJoinRequestDialog(false)}
-                    maxWidth="sm"
-                    fullWidth
-                >
-                    <DialogTitle>
-                        Yêu cầu tham gia nhóm {selectedGroup?.name}
-                    </DialogTitle>
-                    <DialogContent>
-                        {pendingRequests.length === 0 ? (
-                            <Typography color="text.secondary" sx={{ py: 2 }}>
-                                Không có yêu cầu tham gia nào
-                            </Typography>
-                        ) : (
-                            <List>
-                                {pendingRequests.map((request) => (
-                                    <ListItem
-                                        key={request.id}
-                                        secondaryAction={
-                                            <Box>
-                                                <Button
-                                                    color="primary"
-                                                    onClick={() => handleApproveRequest(selectedGroup.id, request.id, true)}
-                                                >
-                                                    Chấp nhận
-                                                </Button>
-                                                <Button
-                                                    color="error"
-                                                    onClick={() => handleApproveRequest(selectedGroup.id, request.id, false)}
-                                                >
-                                                    Từ chối
-                                                </Button>
-                                            </Box>
-                                        }
-                                    >
-                                        <ListItemAvatar>
-                                            <Avatar src={request?.image} />
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={request?.fullName}
-                                            secondary={new Date(request.createdAt).toLocaleDateString('vi-VN')}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setJoinRequestDialog(false)}>
-                            Đóng
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={6000}
-                    onClose={handleCloseSnackbar}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                >
-                    <Alert
-                        onClose={handleCloseSnackbar}
-                        severity={snackbar.severity}
-                        variant="filled"
-                        sx={{ width: '100%' }}
-                    >
-                        {snackbar.message}
-                    </Alert>
-                </Snackbar>
             </Grid>
+
+            {/* Join Request Dialog */}
+            <Dialog
+                open={joinRequestDialog}
+                onClose={() => setJoinRequestDialog(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    Yêu cầu tham gia nhóm {selectedGroup?.name}
+                </DialogTitle>
+                <DialogContent>
+                    {pendingRequests.length === 0 ? (
+                        <Typography color="text.secondary" sx={{ py: 2 }}>
+                            Không có yêu cầu tham gia nào
+                        </Typography>
+                    ) : (
+                        <List>
+                            {pendingRequests.map((request) => (
+                                <ListItem
+                                    key={request.id}
+                                    secondaryAction={
+                                        <Box>
+                                            <Button
+                                                color="primary"
+                                                onClick={() => handleApproveRequest(selectedGroup.id, request.id, true)}
+                                            >
+                                                Chấp nhận
+                                            </Button>
+                                            <Button
+                                                color="error"
+                                                onClick={() => handleApproveRequest(selectedGroup.id, request.id, false)}
+                                            >
+                                                Từ chối
+                                            </Button>
+                                        </Box>
+                                    }
+                                >
+                                    <ListItemAvatar>
+                                        <Avatar src={request?.image} />
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={request?.fullName}
+                                        secondary={new Date(request.createdAt).toLocaleDateString('vi-VN')}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setJoinRequestDialog(false)}>
+                        Đóng
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbar.severity}
+                    variant="filled"
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };

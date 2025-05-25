@@ -24,12 +24,8 @@ function Navigation() {
     const notifOpen = Boolean(notifAnchorEl);
     const { isDarkMode, toggleTheme } = useTheme();
 
-    const allDeliveredNotifs = useSelector(
-        (state) => state.deliveredNotifs.value.notifs
-    );
-
-    const notifToastList = useSelector(
-        (state) => state.deliveredNotifs.value.notifToastList
+    const notifications = useSelector(
+        (state) => state.notification.notifications
     );
 
     const handleClick = (e) => {
@@ -55,31 +51,6 @@ function Navigation() {
     };
 
     useEffect(() => {
-        if (auth?.user) {
-            const url = `${API_BASE_URL}/push-notifications/${auth.user.id}`;
-            const sse = new EventSource(url);
-
-            sse.onopen = () => {
-                console.log("Kết nối SSE thành công!");
-            };
-
-            sse.addEventListener("user-list-event", (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    dispatch(addNotification({ newNotifs: data }));
-                } catch (err) {
-                    console.error("Error parsing SSE data:", err);
-                }
-            });
-
-            sse.onerror = (err) => {
-                console.warn("Lỗi SSE hoặc đang reconnect:", err);
-            };
-
-            return () => {
-                sse.close();
-            };
-        }
     }, [auth, dispatch]);
 
     if (!auth?.user) {
@@ -110,7 +81,7 @@ function Navigation() {
                         >
                             {
                                 item.title === "Thông báo" ? (
-                                    <Badge badgeContent={allDeliveredNotifs.length} color="error">
+                                    <Badge badgeContent={notifications.filter(n => !n.read).length} color="error">
                                         {item.icon}
                                     </Badge>
                                 ) : item.icon
@@ -172,11 +143,11 @@ function Navigation() {
                     flexDirection: "column",
                 }}
             >
-                {notifToastList.map((x, index) => (
-                    <div key={index} onClick={() => dispatch(removeFromToastList({ notif: x }))}>
-                        <ToastComponent notif={x} />
+                {/* {notifications.slice(0, 3).map((notification, index) => (
+                    <div key={index} onClick={() => dispatch(removeFromToastList(notification))}>
+                        <ToastComponent notif={notification} />
                     </div>
-                ))}
+                ))} */}
             </div>
         </div>
     );

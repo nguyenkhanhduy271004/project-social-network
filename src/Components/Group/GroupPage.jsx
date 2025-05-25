@@ -55,6 +55,8 @@ function GroupPage() {
     const [errorMessage, setErrorMessage] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
 
+
+
     const styles = useMemo(() => ({
         container: {
             maxWidth: '1200px',

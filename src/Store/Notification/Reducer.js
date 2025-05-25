@@ -1,50 +1,34 @@
-import { ADD_NOTIFICATION, CLEAR_NOTIFICATIONS, REMOVE_FROM_TOAST_LIST } from "./ActionType";
+import { createReducer } from '@reduxjs/toolkit';
+import { ADD_NOTIFICATION, MARK_NOTIFICATIONS_AS_READ, CLEAR_NOTIFICATIONS } from './Action';
 
 const initialState = {
-    value: {
-        notifs: [],
-        notifToastList: [],
-    },
+    notifications: [],
+    unreadCount: 0
 };
 
-const deliveredNotifsReducer = (state = initialState, action) => {
-    switch (action.type) {
-        case ADD_NOTIFICATION:
-            const newNotifs = Array.isArray(action.payload.newNotifs)
-                ? action.payload.newNotifs
-                : action.payload.newNotifs ? [action.payload.newNotifs] : [];
-
-            return {
-                ...state,
-                value: {
-                    notifs: [...state.value.notifs, ...newNotifs],
-                    notifToastList: [...state.value.notifToastList, ...newNotifs],
-                },
+const notificationReducer = createReducer(initialState, (builder) => {
+    builder
+        .addCase(ADD_NOTIFICATION, (state, action) => {
+            const newNotification = {
+                ...action.payload,
+                id: Date.now(),
+                read: false,
+                timestamp: new Date().toISOString()
             };
+            state.notifications.unshift(newNotification);
+            state.unreadCount += 1;
+        })
+        .addCase(MARK_NOTIFICATIONS_AS_READ, (state) => {
+            state.notifications = state.notifications.map(notification => ({
+                ...notification,
+                read: true
+            }));
+            state.unreadCount = 0;
+        })
+        .addCase(CLEAR_NOTIFICATIONS, (state) => {
+            state.notifications = [];
+            state.unreadCount = 0;
+        });
+});
 
-        case CLEAR_NOTIFICATIONS:
-            return {
-                ...state,
-                value: {
-                    ...state.value,
-                    notifs: [],
-                },
-            };
-
-        case REMOVE_FROM_TOAST_LIST:
-            return {
-                ...state,
-                value: {
-                    ...state.value,
-                    notifToastList: state.value.notifToastList.filter(
-                        (x) => x.id !== action.payload.notif.id
-                    ),
-                },
-            };
-
-        default:
-            return state;
-    }
-};
-
-export default deliveredNotifsReducer;
+export default notificationReducer;

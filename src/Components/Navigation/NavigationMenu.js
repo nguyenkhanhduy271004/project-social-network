@@ -11,6 +11,7 @@ import PendingIcon from "@mui/icons-material/Pending";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import AssistantIcon from '@mui/icons-material/Assistant';
 
 // Create a separate component for the notification badge
 const NotificationBadge = () => {
@@ -56,15 +57,20 @@ export const navigationMenu = [
         path: '/'
     },
     {
+        title: 'AI Chat',
+        icon: <AssistantIcon />,
+        path: '/ai-chat'
+    },
+    {
         title: 'Khám phá',
         icon: <ExploreIcon />,
         path: '/explore'
     },
-    {
-        title: 'Thông báo',
-        icon: <NotificationsIcon />,
-        path: '/notifications'
-    },
+    // {
+    //     title: 'Thông báo',
+    //     icon: <NotificationsIcon />,
+    //     path: '/notifications'
+    // },
     {
         title: 'Tin nhắn',
         icon: <MessageIcon />,

@@ -1,6 +1,34 @@
 import axios from "axios";
 
-export const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+export const API_PREFIX = '/api/v1';
+
+export const API_ENDPOINTS = {
+    AUTH: {
+        LOGIN: '/auth/login',
+        REGISTER: '/auth/register',
+        PROFILE: '/user/profile',
+        UPDATE_PROFILE: '/user',
+    },
+    POST: {
+        CREATE: '/post',
+        GET_ALL: '/post',
+        GET_BY_ID: '/post',
+        LIKE: '/post/like',
+        COMMENT: '/post/comment',
+    },
+    USER: {
+        PROFILE: '/user/profile',
+        FOLLOW: '/user/follow',
+        UNFOLLOW: '/user/unfollow',
+        SEARCH: '/user/search',
+    },
+    CHAT: {
+        GET_CONVERSATIONS: '/chat/conversations',
+        GET_MESSAGES: '/chat/messages',
+        SEND_MESSAGE: '/chat/message',
+    },
+};
 
 export const api = axios.create({
     baseURL: API_BASE_URL,

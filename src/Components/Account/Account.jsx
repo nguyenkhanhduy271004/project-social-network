@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Typography, IconButton } from '@mui/material';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import { useNavigate } from 'react-router-dom';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import Box from '@mui/material/Box';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
@@ -14,7 +15,6 @@ import PostCard from '../HomeSection/PostCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRepost, getUsersPost } from '../../Store/Post/Action';
 import { updateUserProfile, followUser } from '../../Store/Auth/Action';
-import { Typography } from '@mui/material';
 
 function Account() {
     const navigate = useNavigate();
@@ -40,6 +40,8 @@ function Account() {
         bio: auth.user?.bio || '',
     });
     const [tabValue, setTabValue] = useState('1');
+    const [previewImage, setPreviewImage] = useState(null);
+    const [isImageLoading, setIsImageLoading] = useState(false);
 
     useEffect(() => {
         dispatch(getUsersPost(auth.user?.id));
@@ -82,15 +84,70 @@ function Account() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = () => {
-        dispatch(updateUserProfile(formData));
-        handleCloseProfileModal();
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setIsImageLoading(true);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewImage(reader.result);
+                setFormData(prev => ({ ...prev, image: file }));
+                setIsImageLoading(false);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setPreviewImage(null);
+        setFormData(prev => ({ ...prev, image: '' }));
+    };
+
+    const handleSubmit = async () => {
+        try {
+            const formDataToSend = new FormData();
+
+            const userData = {
+                fullName: formData.fullName,
+                location: formData.location,
+                website: formData.website,
+                birthDate: formData.birthDate,
+                mobile: formData.mobile,
+                bio: formData.bio
+            };
+
+            formDataToSend.append('req', new Blob([JSON.stringify(userData)], {
+                type: 'application/json'
+            }));
+
+            if (formData.image instanceof File) {
+                formDataToSend.append('image', formData.image);
+            }
+
+            const response = await dispatch(updateUserProfile(formDataToSend));
+
+            if (response.status === 200) {
+                setFormData({
+                    ...formData,
+                    fullName: response.data.data.fullName,
+                    location: response.data.data.location,
+                    website: response.data.data.website,
+                    birthDate: response.data.data.birthDate,
+                    mobile: response.data.data.mobile,
+                    bio: response.data.data.bio,
+                    image: response.data.data.image
+                });
+                handleCloseProfileModal();
+            }
+        } catch (error) {
+            console.error('Update profile error:', error);
+        }
     };
 
     const handleTabChange = (event, newValue) => setTabValue(newValue);
 
     return (
-        <div>
+        <div >
             <section className="z-50 flex items-center sticky top-0 bg-opacity-95">
                 <KeyboardBackspaceIcon className="cursor-pointer" onClick={handleBack} />
                 <h1 className="py-5 text-xl font-bold opacity-90 ml-5">{auth.user?.fullName}</h1>
@@ -164,16 +221,85 @@ function Account() {
                 </Box>
             </section>
 
-            <Dialog open={openProfileModal} onClose={handleCloseProfileModal}>
+            <Dialog open={openProfileModal} onClose={handleCloseProfileModal} maxWidth="sm" fullWidth>
                 <DialogTitle>Edit Profile</DialogTitle>
                 <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+                        <Box sx={{ position: 'relative', mb: 2 }}>
+                            <Avatar
+                                src={previewImage || formData.image}
+                                alt="Profile preview"
+                                sx={{ width: 120, height: 120, border: '2px solid #e0e0e0' }}
+                            />
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="profile-image-upload"
+                                type="file"
+                                onChange={handleImageChange}
+                            />
+                            <label htmlFor="profile-image-upload">
+                                <IconButton
+                                    component="span"
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        backgroundColor: 'primary.main',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'primary.dark',
+                                        },
+                                    }}
+                                >
+                                    <AddPhotoAlternateIcon />
+                                </IconButton>
+                            </label>
+                            {previewImage && (
+                                <IconButton
+                                    onClick={handleRemoveImage}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                        backgroundColor: 'error.main',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'error.dark',
+                                        },
+                                    }}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            )}
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" align="center">
+                            Click the camera icon to change your profile picture
+                        </Typography>
+                    </Box>
+
                     {['fullName', 'location', 'website', 'birthDate', 'mobile', 'bio'].map(field => (
-                        <TextField key={field} fullWidth margin="normal" label={field.replace(/([A-Z])/g, ' $1').trim()} variant="outlined" name={field} value={formData[field]} onChange={handleChange} />
+                        <TextField
+                            key={field}
+                            fullWidth
+                            margin="normal"
+                            label={field.replace(/([A-Z])/g, ' $1').trim()}
+                            variant="outlined"
+                            name={field}
+                            value={formData[field]}
+                            onChange={handleChange}
+                        />
                     ))}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseProfileModal} color="primary">Cancel</Button>
-                    <Button onClick={handleSubmit} color="primary">Save Changes</Button>
+                    <Button
+                        onClick={handleSubmit}
+                        color="primary"
+                        disabled={isImageLoading}
+                    >
+                        {isImageLoading ? 'Uploading...' : 'Save Changes'}
+                    </Button>
                 </DialogActions>
             </Dialog>
 

@@ -47,15 +47,15 @@ export const createPost = (postData) => async (dispatch) => {
         formData.append("file", postData.file);
         formData.append("content", postData.content);
 
-        const { data } = await api.post(`/${API_PREFIX}/posts`, formData, {
+        const response = await api.post(`/${API_PREFIX}/posts`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
             },
         });
 
-        console.log("Create Post:", data);
-        dispatch({ type: POST_CREATE_SUCCESS, payload: data });
+        console.log("Create Post:", response.data.data);
+        dispatch({ type: POST_CREATE_SUCCESS, payload: response.data.data });
     } catch (error) {
         console.log(error);
         dispatch({ type: POST_CREATE_FAILURE, payload: error.message });
@@ -67,7 +67,7 @@ export const editPost = (postId, formData) => async (dispatch) => {
         console.log("Edited Content:", formData.get("content"));
         console.log("Edited Image:", formData.get("file"));
 
-        const { data } = await api.put(`/${API_PREFIX}/posts/${postId}/edit`, formData, {
+        const { data } = await api.put(`/${API_PREFIX}/posts/${postId}`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
@@ -128,7 +128,7 @@ export const deletePost = (postId) => async (dispatch) => {
 
 export const createComment = (req) => async (dispatch) => {
     try {
-        const { data } = await api.post(`/${API_PREFIX}/posts/${req.postId}/comment`, req);
+        const { data } = await api.post(`/${API_PREFIX}/posts/${req.postId}/comments`, req);
         dispatch({ type: ADD_COMMENT_POST_SUCCESS, payload: data });
     } catch (error) {
         console.log(error);
@@ -138,7 +138,7 @@ export const createComment = (req) => async (dispatch) => {
 
 export const getComments = (postId) => async (dispatch) => {
     try {
-        const res = await api.get(`/${API_PREFIX}/posts/${postId}/comment`);
+        const res = await api.get(`/${API_PREFIX}/posts/${postId}/comments`);
         dispatch({
             type: GET_COMMENT_POST_SUCCESS, payload: {
                 postId: postId,

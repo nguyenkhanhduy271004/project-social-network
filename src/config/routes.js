@@ -1,0 +1,30 @@
+export const ROUTES = {
+    HOME: '/',
+    LOGIN: '/login',
+    REGISTER: '/register',
+    PROFILE: '/profile',
+    ACCOUNT: '/account',
+    MESSAGE: '/message',
+    CHAT: '/chat',
+    SEARCH: '/search',
+    NOTIFICATIONS: '/notifications',
+    ADMIN: '/admin',
+    GAME: '/game',
+    GROUP: '/group',
+    REEL: '/reel',
+    STORY: '/story',
+};
+
+export const PRIVATE_ROUTES = [
+    ROUTES.PROFILE,
+    ROUTES.ACCOUNT,
+    ROUTES.MESSAGE,
+    ROUTES.CHAT,
+    ROUTES.SEARCH,
+    ROUTES.NOTIFICATIONS,
+    ROUTES.ADMIN,
+    ROUTES.GAME,
+    ROUTES.GROUP,
+    ROUTES.REEL,
+    ROUTES.STORY,
+]; 
