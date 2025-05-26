@@ -11,6 +11,7 @@ export interface User {
     backgroundImage?: string;
     followers?: User[];
     following?: User[];
+    admin?: boolean;
 }
 
 export interface Post {
@@ -29,6 +30,18 @@ export interface Comment {
     content: string;
     createdAt: string;
     user: User;
+}
+
+export interface Group {
+    id: string;
+    name: string;
+    description: string;
+    image?: string;
+    createdAt: string;
+    updatedAt: string;
+    members: User[];
+    admins: User[];
+    posts: Post[];
 }
 
 export interface LoginCredentials {

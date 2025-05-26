@@ -28,20 +28,27 @@ import {
     DialogActions,
     Snackbar,
     Alert,
-    InputAdornment
+    InputAdornment,
+    Paper,
+    Fade,
+    Zoom,
+    Chip
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import GroupIcon from "@mui/icons-material/Group";
 import SearchIcon from "@mui/icons-material/Search";
+import PeopleIcon from "@mui/icons-material/People";
+import PublicIcon from "@mui/icons-material/Public";
+import LockIcon from "@mui/icons-material/Lock";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../config/api";
 import PostCard from "../HomeSection/PostCard";
 
 const LoadingSkeleton = () => (
     <Box sx={{ width: '100%' }}>
-        <Skeleton variant="rectangular" height={60} sx={{ mb: 2, borderRadius: 1 }} />
-        <Skeleton variant="rectangular" height={100} sx={{ mb: 2, borderRadius: 1 }} />
-        <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" height={60} sx={{ mb: 2, borderRadius: 2 }} />
+        <Skeleton variant="rectangular" height={100} sx={{ mb: 2, borderRadius: 2 }} />
+        <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
     </Box>
 );
 
@@ -275,269 +282,384 @@ const Groups = () => {
                 {/* Left Column - Group Management */}
                 <Grid item xs={12} md={4}>
                     {/* Create Group Card */}
-                    <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
-                                Tạo Nhóm Mới
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="Nhập tên nhóm..."
-                                variant="outlined"
-                                value={groupName}
-                                onChange={(e) => setGroupName(e.target.value)}
-                                sx={{ mb: 2 }}
-                                disabled={isCreating}
-                            />
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={isPublic}
-                                        onChange={(e) => setIsPublic(e.target.checked)}
-                                        color="primary"
-                                    />
-                                }
-                                label={isPublic ? "Nhóm công khai" : "Nhóm riêng tư"}
-                                sx={{ mb: 2 }}
-                            />
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                onClick={() => handleCreateGroup(groupName)}
-                                startIcon={isCreating ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-                                disabled={!groupName?.trim() || isCreating}
-                                sx={{
-                                    borderRadius: 2,
-                                    py: 1.5,
-                                    textTransform: 'none',
-                                    fontWeight: 500,
-                                    bgcolor: '#1a237e',
-                                    '&:hover': {
-                                        bgcolor: '#0d1642'
+                    <Fade in={true} timeout={500}>
+                        <Card sx={{
+                            mb: 3,
+                            borderRadius: 3,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                            transition: 'transform 0.2s ease-in-out',
+                            '&:hover': {
+                                transform: 'translateY(-4px)'
+                            }
+                        }}>
+                            <CardContent>
+                                <Typography variant="h6" sx={{
+                                    fontWeight: 700,
+                                    mb: 3,
+                                    color: "#1a237e",
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}>
+                                    <AddIcon /> Tạo Nhóm Mới
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    placeholder="Nhập tên nhóm..."
+                                    variant="outlined"
+                                    value={groupName}
+                                    onChange={(e) => setGroupName(e.target.value)}
+                                    sx={{
+                                        mb: 2,
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            '&:hover fieldset': {
+                                                borderColor: '#1a237e',
+                                            },
+                                        }
+                                    }}
+                                    disabled={isCreating}
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={isPublic}
+                                            onChange={(e) => setIsPublic(e.target.checked)}
+                                            color="primary"
+                                        />
                                     }
-                                }}
-                            >
-                                {isCreating ? 'Đang tạo...' : 'Tạo Nhóm'}
-                            </Button>
-                        </CardContent>
-                    </Card>
+                                    label={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            {isPublic ? (
+                                                <>
+                                                    <PublicIcon fontSize="small" />
+                                                    <Typography>Nhóm công khai</Typography>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <LockIcon fontSize="small" />
+                                                    <Typography>Nhóm riêng tư</Typography>
+                                                </>
+                                            )}
+                                        </Box>
+                                    }
+                                    sx={{ mb: 2 }}
+                                />
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={() => handleCreateGroup(groupName)}
+                                    startIcon={isCreating ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+                                    disabled={!groupName?.trim() || isCreating}
+                                    sx={{
+                                        borderRadius: 2,
+                                        py: 1.5,
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        bgcolor: '#1a237e',
+                                        '&:hover': {
+                                            bgcolor: '#0d1642',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 4px 12px rgba(26, 35, 126, 0.3)'
+                                        },
+                                        transition: 'all 0.2s ease-in-out'
+                                    }}
+                                >
+                                    {isCreating ? 'Đang tạo...' : 'Tạo Nhóm'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Fade>
 
                     {/* Joined Groups Card */}
-                    <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
-                                Nhóm Đã Tham Gia ({userGroups?.length || 0})
-                            </Typography>
-                            {!Array.isArray(userGroups) || userGroups.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', py: 3, color: 'text.secondary' }}>
-                                    <GroupIcon sx={{ fontSize: 40, mb: 1, opacity: 0.5 }} />
-                                    <Typography>Chưa tham gia nhóm nào</Typography>
-                                </Box>
-                            ) : (
-                                <List sx={{ mx: -2 }}>
-                                    {userGroups.map((group) => (
-                                        group && group.id && (
-                                            <React.Fragment key={group.id}>
-                                                <ListItem
-                                                    sx={{
-                                                        px: 2,
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(0,0,0,0.04)',
-                                                            cursor: 'pointer'
-                                                        }
-                                                    }}
-                                                    onClick={() => navigate(`/groups/${group.id}`)}
-                                                >
-                                                    <ListItemAvatar>
-                                                        <Avatar sx={{ bgcolor: "#1a237e" }}>
-                                                            <GroupIcon />
-                                                        </Avatar>
-                                                    </ListItemAvatar>
-                                                    <ListItemText
-                                                        primary={group.name}
-                                                        secondary={group.isPublic ? 'Công khai' : 'Riêng tư'}
-                                                    />
-                                                    {group.admin?.id === user?.id ? (
-                                                        <Tooltip title="Quản lý yêu cầu">
-                                                            <Button
-                                                                size="small"
-                                                                variant="outlined"
-                                                                color="primary"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setSelectedGroup(group);
-                                                                    setJoinRequestDialog(true);
-                                                                }}
-                                                            >
-                                                                Quản lý
-                                                            </Button>
-                                                        </Tooltip>
-                                                    ) : (
-                                                        <Tooltip title="Rời nhóm">
-                                                            <Button
-                                                                size="small"
-                                                                variant="outlined"
-                                                                color="error"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleLeaveGroup(group.id);
-                                                                }}
-                                                            >
-                                                                Rời nhóm
-                                                            </Button>
-                                                        </Tooltip>
-                                                    )}
-                                                </ListItem>
-                                                <Divider component="li" />
-                                            </React.Fragment>
-                                        )
-                                    ))}
-                                </List>
-                            )}
-                        </CardContent>
-                    </Card>
+                    <Fade in={true} timeout={700}>
+                        <Card sx={{
+                            borderRadius: 3,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                            transition: 'transform 0.2s ease-in-out',
+                            '&:hover': {
+                                transform: 'translateY(-4px)'
+                            }
+                        }}>
+                            <CardContent>
+                                <Typography variant="h6" sx={{
+                                    fontWeight: 700,
+                                    mb: 3,
+                                    color: "#1a237e",
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}>
+                                    <PeopleIcon /> Nhóm Đã Tham Gia ({userGroups?.length || 0})
+                                </Typography>
+                                {!Array.isArray(userGroups) || userGroups.length === 0 ? (
+                                    <Box sx={{
+                                        textAlign: 'center',
+                                        py: 4,
+                                        color: 'text.secondary',
+                                        bgcolor: 'rgba(0,0,0,0.02)',
+                                        borderRadius: 2
+                                    }}>
+                                        <GroupIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                                        <Typography variant="h6" sx={{ mb: 1 }}>Chưa tham gia nhóm nào</Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Khám phá và tham gia các nhóm phù hợp với bạn
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <List sx={{ mx: -2 }}>
+                                        {userGroups.map((group) => (
+                                            group && group.id && (
+                                                <React.Fragment key={group.id}>
+                                                    <ListItem
+                                                        sx={{
+                                                            px: 2,
+                                                            py: 1.5,
+                                                            transition: 'all 0.2s ease-in-out',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(26, 35, 126, 0.04)',
+                                                                cursor: 'pointer',
+                                                                transform: 'translateX(4px)'
+                                                            }
+                                                        }}
+                                                        onClick={() => navigate(`/groups/${group.id}`)}
+                                                    >
+                                                        <ListItemAvatar>
+                                                            <Avatar sx={{
+                                                                bgcolor: "#1a237e",
+                                                                width: 48,
+                                                                height: 48,
+                                                                boxShadow: '0 2px 8px rgba(26, 35, 126, 0.2)'
+                                                            }}>
+                                                                <GroupIcon />
+                                                            </Avatar>
+                                                        </ListItemAvatar>
+                                                        <ListItemText
+                                                            primary={
+                                                                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                                                    {group.name}
+                                                                </Typography>
+                                                            }
+                                                            secondary={
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                    <Chip
+                                                                        size="small"
+                                                                        icon={group.isPublic ? <PublicIcon /> : <LockIcon />}
+                                                                        label={group.isPublic ? 'Công khai' : 'Riêng tư'}
+                                                                        sx={{
+                                                                            height: 24,
+                                                                            '& .MuiChip-icon': { fontSize: 16 }
+                                                                        }}
+                                                                    />
+                                                                    <Typography variant="body2" color="text.secondary">
+                                                                        {group.memberCount || 0} thành viên
+                                                                    </Typography>
+                                                                </Box>
+                                                            }
+                                                        />
+                                                        {group.admin?.id === user?.id ? (
+                                                            <Tooltip title="Quản lý yêu cầu">
+                                                                <Button
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    color="primary"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedGroup(group);
+                                                                        setJoinRequestDialog(true);
+                                                                    }}
+                                                                    sx={{
+                                                                        borderRadius: 2,
+                                                                        textTransform: 'none',
+                                                                        fontWeight: 500
+                                                                    }}
+                                                                >
+                                                                    Quản lý
+                                                                </Button>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            <Tooltip title="Rời nhóm">
+                                                                <Button
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    color="error"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleLeaveGroup(group.id);
+                                                                    }}
+                                                                    sx={{
+                                                                        borderRadius: 2,
+                                                                        textTransform: 'none',
+                                                                        fontWeight: 500
+                                                                    }}
+                                                                >
+                                                                    Rời nhóm
+                                                                </Button>
+                                                            </Tooltip>
+                                                        )}
+                                                    </ListItem>
+                                                    <Divider component="li" sx={{ opacity: 0.5 }} />
+                                                </React.Fragment>
+                                            )
+                                        ))}
+                                    </List>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Fade>
                 </Grid>
 
                 {/* Right Column - Group Discovery and Posts */}
                 <Grid item xs={12} md={8}>
                     {/* Group Search Card */}
-                    <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
-                                Khám Phá Nhóm
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="Tìm kiếm nhóm..."
-                                variant="outlined"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{ mb: 3 }}
-                            />
-                            {filteredGroups.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', py: 3, color: 'text.secondary' }}>
-                                    <GroupIcon sx={{ fontSize: 40, mb: 1, opacity: 0.5 }} />
-                                    <Typography>
-                                        {searchQuery.trim() ? 'Không tìm thấy nhóm nào' : 'Chưa có nhóm nào'}
-                                    </Typography>
-                                </Box>
-                            ) : (
-                                <Grid container spacing={2}>
-                                    {filteredGroups.map((group) => (
-                                        <Grid item xs={12} key={group.id}>
-                                            <Card
-                                                sx={{
-                                                    borderRadius: 2,
-                                                    transition: 'all 0.3s ease',
-                                                    '&:hover': {
-                                                        transform: 'translateY(-2px)',
-                                                        boxShadow: 3,
-                                                        cursor: 'pointer'
-                                                    }
-                                                }}
-                                                onClick={() => navigate(`/groups/${group.id}`)}
-                                            >
-                                                <CardContent>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                        <Avatar sx={{ bgcolor: "#1a237e", width: 56, height: 56 }}>
-                                                            <GroupIcon />
-                                                        </Avatar>
-                                                        <Box sx={{ flex: 1 }}>
-                                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                                                {group.name}
-                                                            </Typography>
-                                                            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-                                                                <Typography variant="body2" color="text.secondary">
-                                                                    {group.isPublic ? 'Công khai' : 'Riêng tư'}
-                                                                </Typography>
-                                                                <Typography variant="body2" color="text.secondary">
-                                                                    {group.memberCount || 0} thành viên
-                                                                </Typography>
-                                                            </Box>
-                                                        </Box>
-                                                        {!userGroups.some(g => g.id === group.id) && (
-                                                            <Button
-                                                                variant="contained"
-                                                                size="small"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleJoinGroup(group.id);
-                                                                }}
-                                                                disabled={joiningGroup === group.id || joinRequestStatus[group.id] === 'pending'}
-                                                                sx={{
-                                                                    borderRadius: 2,
-                                                                    textTransform: 'none',
-                                                                    bgcolor: '#1a237e',
-                                                                    '&:hover': {
-                                                                        bgcolor: '#0d1642'
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {joiningGroup === group.id ? (
-                                                                    <CircularProgress size={20} color="inherit" />
-                                                                ) : joinRequestStatus[group.id] === 'pending' ? (
-                                                                    'Đã gửi yêu cầu'
-                                                                ) : (
-                                                                    'Tham gia nhóm'
+                    <Fade in={true} timeout={900}>
+                        <Card sx={{
+                            mb: 3,
+                            borderRadius: 3,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                            transition: 'transform 0.2s ease-in-out',
+                            '&:hover': {
+                                transform: 'translateY(-4px)'
+                            }
+                        }}>
+                            <CardContent>
+                                <Typography variant="h6" sx={{
+                                    fontWeight: 700,
+                                    mb: 3,
+                                    color: "#1a237e",
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}>
+                                    <SearchIcon /> Khám Phá Nhóm
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    placeholder="Tìm kiếm nhóm..."
+                                    variant="outlined"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon sx={{ color: 'text.secondary' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        mb: 3,
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            '&:hover fieldset': {
+                                                borderColor: '#1a237e',
+                                            },
+                                        }
+                                    }}
+                                />
+                                {filteredGroups.length === 0 ? (
+                                    <Box sx={{
+                                        textAlign: 'center',
+                                        py: 4,
+                                        color: 'text.secondary',
+                                        bgcolor: 'rgba(0,0,0,0.02)',
+                                        borderRadius: 2
+                                    }}>
+                                        <GroupIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            {searchQuery.trim() ? 'Không tìm thấy nhóm nào' : 'Chưa có nhóm nào'}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {searchQuery.trim() ? 'Thử tìm kiếm với từ khóa khác' : 'Hãy là người đầu tiên tạo nhóm'}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <Grid container spacing={2}>
+                                        {filteredGroups.map((group) => (
+                                            <Grid item xs={12} key={group.id}>
+                                                <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+                                                    <Card
+                                                        sx={{
+                                                            borderRadius: 3,
+                                                            transition: 'all 0.3s ease',
+                                                            '&:hover': {
+                                                                transform: 'translateY(-4px)',
+                                                                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                                cursor: 'pointer'
+                                                            }
+                                                        }}
+                                                        onClick={() => navigate(`/groups/${group.id}`)}
+                                                    >
+                                                        <CardContent>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                                <Avatar sx={{
+                                                                    bgcolor: "#1a237e",
+                                                                    width: 64,
+                                                                    height: 64,
+                                                                    boxShadow: '0 4px 12px rgba(26, 35, 126, 0.2)'
+                                                                }}>
+                                                                    <GroupIcon sx={{ fontSize: 32 }} />
+                                                                </Avatar>
+                                                                <Box sx={{ flex: 1 }}>
+                                                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                                                        {group.name}
+                                                                    </Typography>
+                                                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                                                        <Chip
+                                                                            size="small"
+                                                                            icon={group.isPublic ? <PublicIcon /> : <LockIcon />}
+                                                                            label={group.isPublic ? 'Công khai' : 'Riêng tư'}
+                                                                            sx={{
+                                                                                height: 24,
+                                                                                '& .MuiChip-icon': { fontSize: 16 }
+                                                                            }}
+                                                                        />
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {group.memberCount || 0} thành viên
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Box>
+                                                                {!userGroups.some(g => g.id === group.id) && (
+                                                                    <Button
+                                                                        variant="contained"
+                                                                        size="small"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleJoinGroup(group.id);
+                                                                        }}
+                                                                        disabled={joiningGroup === group.id || joinRequestStatus[group.id] === 'pending'}
+                                                                        sx={{
+                                                                            borderRadius: 2,
+                                                                            textTransform: 'none',
+                                                                            fontWeight: 500,
+                                                                            bgcolor: '#1a237e',
+                                                                            '&:hover': {
+                                                                                bgcolor: '#0d1642',
+                                                                                transform: 'translateY(-2px)',
+                                                                                boxShadow: '0 4px 12px rgba(26, 35, 126, 0.3)'
+                                                                            },
+                                                                            transition: 'all 0.2s ease-in-out'
+                                                                        }}
+                                                                    >
+                                                                        {joiningGroup === group.id ? (
+                                                                            <CircularProgress size={20} color="inherit" />
+                                                                        ) : joinRequestStatus[group.id] === 'pending' ? (
+                                                                            'Đã gửi yêu cầu'
+                                                                        ) : (
+                                                                            'Tham gia nhóm'
+                                                                        )}
+                                                                    </Button>
                                                                 )}
-                                                            </Button>
-                                                        )}
-                                                    </Box>
-                                                </CardContent>
-                                            </Card>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Posts Card */}
-                    <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: "#1a237e" }}>
-                                Bài Viết Từ Nhóm ({posts?.length || 0})
-                            </Typography>
-                            {!Array.isArray(posts) || posts.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                                    <Typography>Chưa có bài viết nào</Typography>
-                                </Box>
-                            ) : (
-                                <Box display="flex" flexDirection="column" gap={2}>
-                                    {posts.map((post) => {
-                                        if (!post) return null;
-                                        const isOwner = post.user?.id === user?.id;
-                                        const isJoined = Array.isArray(userGroups) &&
-                                            post.groupId &&
-                                            userGroups.some(group => group && group.id === post.groupId);
-
-                                        const postGroup = allGroups.find(group => group.id === post.groupId);
-
-                                        return <PostCard
-                                            key={post.id}
-                                            post={{
-                                                ...post,
-                                                groupName: postGroup?.name || 'Không có nhóm',
-                                                groupId: post.groupId
-                                            }}
-                                            isOwner={isOwner}
-                                            isJoined={isJoined}
-                                            onJoinGroup={() => handleJoinGroup(post.groupId)}
-                                            joiningGroup={joiningGroup === post.groupId}
-                                            joinRequestStatus={joinRequestStatus[post.groupId]}
-                                        />;
-                                    })}
-                                </Box>
-                            )}
-                        </CardContent>
-                    </Card>
+                                                            </Box>
+                                                        </CardContent>
+                                                    </Card>
+                                                </Zoom>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Fade>
                 </Grid>
             </Grid>
 
@@ -607,8 +729,11 @@ const Groups = () => {
                 <Alert
                     onClose={handleCloseSnackbar}
                     severity={snackbar.severity}
-                    variant="filled"
-                    sx={{ width: '100%' }}
+                    sx={{
+                        width: '100%',
+                        borderRadius: 2,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}
                 >
                     {snackbar.message}
                 </Alert>
