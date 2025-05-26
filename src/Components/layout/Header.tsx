@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
-import Avatar from '../common/Avatar';
+import Avatar from '../Common/Avatar';
 import { ROUTES } from '../../config/routes';
 import { RootState } from '../../types';
 

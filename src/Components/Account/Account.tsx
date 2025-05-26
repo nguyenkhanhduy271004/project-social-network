@@ -30,21 +30,6 @@ interface FormData {
     bio: string;
 }
 
-interface UpdateProfileResponse {
-    status: number;
-    data: {
-        data: {
-            fullName: string;
-            location: string;
-            website: string;
-            birthDate: string;
-            mobile: string;
-            bio: string;
-            image: string;
-        }
-    }
-}
-
 const Account: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
@@ -157,21 +142,19 @@ const Account: React.FC = () => {
                 formDataToSend.append('image', formData.image);
             }
 
-            const response = await dispatch(updateUserProfile(formDataToSend)).unwrap() as UpdateProfileResponse;
+            const response = await dispatch(updateUserProfile(formDataToSend)).unwrap();
 
-            if (response.status === 200) {
-                setFormData({
-                    ...formData,
-                    fullName: response.data.data.fullName,
-                    location: response.data.data.location,
-                    website: response.data.data.website,
-                    birthDate: response.data.data.birthDate,
-                    mobile: response.data.data.mobile,
-                    bio: response.data.data.bio,
-                    image: response.data.data.image
-                });
-                handleCloseProfileModal();
-            }
+            setFormData({
+                ...formData,
+                fullName: response.fullName,
+                location: response.location || '',
+                website: response.website || '',
+                birthDate: response.birthDate || '',
+                mobile: response.mobile || '',
+                bio: response.bio || '',
+                image: response.image || ''
+            });
+            handleCloseProfileModal();
         } catch (error) {
             console.error('Update profile error:', error);
         }

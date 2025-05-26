@@ -1,4 +1,4 @@
-import { api } from '../config/api';
+import api from '../config/api';
 import { API_ENDPOINTS } from '../config/api';
 import { Post } from '../types';
 

@@ -1,35 +1,27 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { PostState, Post } from '../../types';
-import {
-    getPosts,
-    createPost,
-    likePost,
-    unlikePost,
-    deletePost,
-    getPost,
-    getRepost,
-    getUsersPost,
-} from '../actions/post';
+import { Post } from '../../types';
+import { getPosts, getUsersPost, getRepost, createPost, likePost, unlikePost, deletePost, getPost } from '../actions/post';
+
+interface PostState {
+    posts: Post[];
+    rePost: Post[];
+    currentPost: Post | null;
+    loading: boolean;
+    error: string | null;
+}
 
 const initialState: PostState = {
     posts: [],
-    currentPost: null,
     rePost: [],
+    currentPost: null,
     loading: false,
-    error: null,
+    error: null
 };
 
 const postSlice = createSlice({
     name: 'post',
     initialState,
-    reducers: {
-        clearError: (state) => {
-            state.error = null;
-        },
-        clearCurrentPost: (state) => {
-            state.currentPost = null;
-        },
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             // Get Posts
@@ -37,95 +29,115 @@ const postSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getPosts.fulfilled, (state, action: PayloadAction<Post[]>) => {
+            .addCase(getPosts.fulfilled, (state, action) => {
                 state.loading = false;
-                state.posts = action.payload;
+                state.posts = action.payload as Post[];
             })
             .addCase(getPosts.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || 'Failed to get posts';
+                state.error = action.error.message || 'Failed to fetch posts';
             })
-            // Get User's Posts
+            // Get User Posts
             .addCase(getUsersPost.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getUsersPost.fulfilled, (state, action: PayloadAction<Post[]>) => {
+            .addCase(getUsersPost.fulfilled, (state, action) => {
                 state.loading = false;
-                state.posts = action.payload;
+                state.posts = action.payload as Post[];
             })
             .addCase(getUsersPost.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || 'Failed to get user posts';
+                state.error = action.error.message || 'Failed to fetch user posts';
             })
             // Get Reposts
             .addCase(getRepost.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getRepost.fulfilled, (state, action: PayloadAction<Post[]>) => {
+            .addCase(getRepost.fulfilled, (state, action) => {
                 state.loading = false;
-                state.rePost = action.payload;
+                state.rePost = action.payload as Post[];
             })
             .addCase(getRepost.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || 'Failed to get reposts';
+                state.error = action.error.message || 'Failed to fetch reposts';
             })
             // Create Post
             .addCase(createPost.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(createPost.fulfilled, (state, action: PayloadAction<Post>) => {
+            .addCase(createPost.fulfilled, (state, action) => {
                 state.loading = false;
-                state.posts.unshift(action.payload);
+                state.posts.unshift(action.payload as Post);
             })
             .addCase(createPost.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to create post';
             })
             // Like Post
-            .addCase(likePost.fulfilled, (state, action: PayloadAction<Post>) => {
-                const index = state.posts.findIndex((post) => post.id === action.payload.id);
+            .addCase(likePost.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(likePost.fulfilled, (state, action) => {
+                const index = state.posts.findIndex((post) => post.id === (action.payload as Post).id);
                 if (index !== -1) {
-                    state.posts[index] = action.payload;
+                    state.posts[index] = action.payload as Post;
                 }
-                if (state.currentPost?.id === action.payload.id) {
-                    state.currentPost = action.payload;
-                }
+                state.loading = false;
+            })
+            .addCase(likePost.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to like post';
             })
             // Unlike Post
-            .addCase(unlikePost.fulfilled, (state, action: PayloadAction<Post>) => {
-                const index = state.posts.findIndex((post) => post.id === action.payload.id);
+            .addCase(unlikePost.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(unlikePost.fulfilled, (state, action) => {
+                const index = state.posts.findIndex((post) => post.id === (action.payload as Post).id);
                 if (index !== -1) {
-                    state.posts[index] = action.payload;
+                    state.posts[index] = action.payload as Post;
                 }
-                if (state.currentPost?.id === action.payload.id) {
-                    state.currentPost = action.payload;
-                }
+                state.loading = false;
+            })
+            .addCase(unlikePost.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to unlike post';
             })
             // Delete Post
-            .addCase(deletePost.fulfilled, (state, action: PayloadAction<string>) => {
+            .addCase(deletePost.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deletePost.fulfilled, (state, action) => {
                 state.posts = state.posts.filter((post) => post.id !== action.payload);
                 if (state.currentPost?.id === action.payload) {
                     state.currentPost = null;
                 }
+                state.loading = false;
             })
-            // Get Post
+            .addCase(deletePost.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to delete post';
+            })
+            // Get Single Post
             .addCase(getPost.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getPost.fulfilled, (state, action: PayloadAction<Post>) => {
+            .addCase(getPost.fulfilled, (state, action) => {
                 state.loading = false;
-                state.currentPost = action.payload;
+                state.currentPost = action.payload as Post;
             })
             .addCase(getPost.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || 'Failed to get post';
+                state.error = action.error.message || 'Failed to fetch post';
             });
-    },
+    }
 });
 
-export const { clearError, clearCurrentPost } = postSlice.actions;
 export default postSlice.reducer; 

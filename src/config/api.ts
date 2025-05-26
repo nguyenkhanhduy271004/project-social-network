@@ -1,4 +1,4 @@
-import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
+import axios from 'axios';
 
 export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 export const API_PREFIX: string = '/api/v1';
@@ -57,24 +57,27 @@ export const API_ENDPOINTS: ApiEndpoints = {
     },
 };
 
-export const api = axios.create({
-    baseURL: API_BASE_URL,
+const api = axios.create({
+    baseURL: API_BASE_URL + API_PREFIX,
     headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
     },
-    timeout: 15000
 });
 
 api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem("jwt");
+    (config) => {
+        const token = localStorage.getItem('jwt');
         if (token && config.headers) {
-            config.headers["Authorization"] = `Bearer ${token}`;
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error: AxiosError) => Promise.reject(error)
+    (error) => {
+        return Promise.reject(error);
+    }
 );
+
+export default api;
 
 interface WebSocketConfig {
     debug: boolean;

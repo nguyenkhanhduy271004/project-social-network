@@ -1,31 +1,31 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from '../../services/auth';
-import { User } from '../../types';
+import { User, AuthResponse } from '../../types';
 
-export const loginUser = createAsyncThunk(
+export const loginUser = createAsyncThunk<AuthResponse, { email: string; password: string }>(
     'auth/login',
-    async (credentials: { email: string; password: string }) => {
+    async (credentials) => {
         const response = await authService.login(credentials);
         return response;
     }
 );
 
-export const registerUser = createAsyncThunk(
+export const registerUser = createAsyncThunk<AuthResponse, { email: string; password: string; fullName: string }>(
     'auth/register',
-    async (userData: { email: string; password: string; fullName: string }) => {
+    async (userData) => {
         const response = await authService.register(userData);
         return response;
     }
 );
 
-export const logoutUser = createAsyncThunk(
+export const logoutUser = createAsyncThunk<void, void>(
     'auth/logout',
     async () => {
         await authService.logout();
     }
 );
 
-export const getProfile = createAsyncThunk(
+export const getProfile = createAsyncThunk<User, void>(
     'auth/getProfile',
     async () => {
         const response = await authService.getProfile();
@@ -33,25 +33,25 @@ export const getProfile = createAsyncThunk(
     }
 );
 
-export const updateUserProfile = createAsyncThunk(
+export const updateUserProfile = createAsyncThunk<User, FormData>(
     'auth/updateProfile',
-    async (formData: FormData) => {
+    async (formData) => {
         const response = await authService.updateProfile(formData);
         return response;
     }
 );
 
-export const followUser = createAsyncThunk(
+export const followUser = createAsyncThunk<{ following: User[] }, string>(
     'auth/followUser',
-    async (userId: string) => {
+    async (userId) => {
         const response = await authService.followUser(userId);
         return response;
     }
 );
 
-export const unfollowUser = createAsyncThunk(
+export const unfollowUser = createAsyncThunk<{ following: User[] }, string>(
     'auth/unfollowUser',
-    async (userId: string) => {
+    async (userId) => {
         const response = await authService.unfollowUser(userId);
         return response;
     }

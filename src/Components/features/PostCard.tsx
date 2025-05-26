@@ -19,10 +19,11 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ShareIcon from '@mui/icons-material/Share';
-import { likePost, deletePost } from '../../store/actions/post';
+import { likePost, deletePost } from '../../Store/actions/post';
 import { formatDate } from '../../utils/date';
 import { ROUTES } from '../../config/routes';
 import { Post, RootState } from '../../types';
+import { AppDispatch } from '../../Store/index';
 
 interface PostCardProps {
     post: Post;
@@ -44,7 +45,7 @@ const PostImage = styled('img')({
 
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const { user } = useSelector((state: RootState) => state.auth);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
