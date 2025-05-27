@@ -141,10 +141,15 @@ export const getRandomUser = () => async (dispatch) => {
 
 export const searchUsers = (query) => async (dispatch) => {
     try {
+        const jwt = localStorage.getItem("jwt");
+        if (!jwt) {
+            throw new Error("No authentication token found");
+        }
+
         // Determine if query is a user ID (number) or a search term
         const isUserId = !isNaN(query) && String(parseInt(query)) === String(query);
 
-        let endpoint = '/${API_PREFIX}/user/search';
+        let endpoint = `/${API_PREFIX}/user/search`;
         let params = { query };
 
         // If it looks like a user ID, use the find user endpoint
@@ -153,7 +158,12 @@ export const searchUsers = (query) => async (dispatch) => {
             params = {};
         }
 
-        const { data } = await api.get(endpoint, { params });
+        const { data } = await api.get(endpoint, {
+            params,
+            headers: {
+                'Authorization': `Bearer ${jwt}`
+            }
+        });
 
         // Handle response based on which endpoint was called
         let users = [];
@@ -162,7 +172,7 @@ export const searchUsers = (query) => async (dispatch) => {
             users = data.data ? [data.data] : [];
         } else {
             // If we used the search endpoint, data should already be an array
-            users = data || [];
+            users = data.data || [];
         }
 
         dispatch({ type: SEARCH_USERS_SUCCESS, payload: users });

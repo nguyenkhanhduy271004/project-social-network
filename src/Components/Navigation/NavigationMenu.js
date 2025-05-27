@@ -12,6 +12,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import AssistantIcon from '@mui/icons-material/Assistant';
+import SearchIcon from '@mui/icons-material/Search';
 
 // Create a separate component for the notification badge
 const NotificationBadge = () => {
@@ -66,11 +67,11 @@ export const navigationMenu = [
         icon: <ExploreIcon />,
         path: '/explore'
     },
-    // {
-    //     title: 'Thông báo',
-    //     icon: <NotificationsIcon />,
-    //     path: '/notifications'
-    // },
+    {
+        title: 'Tìm kiếm',
+        icon: <SearchIcon />,
+        path: '/search'
+    },
     {
         title: 'Tin nhắn',
         icon: <MessageIcon />,

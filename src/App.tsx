@@ -29,6 +29,7 @@ import Notifications from './Pages/Notifications';
 import Forbidden from './Components/Common/Forbidden';
 import { RootState, User } from './types';
 import { AppDispatch } from './Store/Store';
+import SearchUser from './Components/SearchUser/SearchUser';
 
 const App: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -91,6 +92,7 @@ const App: React.FC = () => {
                     <Route path="/groups/:groupId" element={<GroupPage />} />
                     <Route path="/ai-chat" element={auth.user ? <Chat /> : <Navigate to="/login" />} />
                     <Route path="/notifications" element={auth.user ? <Notifications /> : <Navigate to="/login" />} />
+                    <Route path="/search" element={auth.user ? <SearchUser /> : <Navigate to="/login" />} />
                     <Route
                         path="/admin"
                         element={
