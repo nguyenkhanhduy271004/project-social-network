@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Typography, IconButton } from '@mui/material';
+import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Typography, IconButton, Paper } from '@mui/material';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import { useNavigate } from 'react-router-dom';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
@@ -163,44 +163,84 @@ const Account: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => setTabValue(newValue);
 
     return (
-        <div>
-            <section className="z-50 flex items-center sticky top-0 bg-opacity-95">
-                <KeyboardBackspaceIcon className="cursor-pointer" onClick={handleBack} />
-                <h1 className="py-5 text-xl font-bold opacity-90 ml-5">{auth.user?.fullName}</h1>
+        <div className="max-w-4xl mx-auto bg-white">
+            <section className="z-50 flex items-center sticky top-0 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm">
+                <IconButton onClick={handleBack} className="hover:bg-gray-100">
+                    <KeyboardBackspaceIcon />
+                </IconButton>
+                <h1 className="py-4 text-xl font-bold ml-2">{auth.user?.fullName}</h1>
             </section>
 
-            <section>
-                <img className="w-[100%] h-[15rem] object-cover" src="https://www.anhrgroup.com/sites/default/files/styles/inner_pages_slideshow/public/basic-pages/al-nahda-samar-restaurant-1.jpg?itok=GkrSRo1S" alt="" />
+            <section className="relative">
+                <img
+                    className="w-full h-[20rem] object-cover"
+                    src={auth.user?.backgroundImage || "https://www.anhrgroup.com/sites/default/files/styles/inner_pages_slideshow/public/basic-pages/al-nahda-samar-restaurant-1.jpg?itok=GkrSRo1S"}
+                    alt="Cover"
+                />
             </section>
 
-            <section className="pl-6">
-                <div className="flex justify-between items-start mt-5 h-[5rem]">
-                    <Avatar className="transform -translate-y-24" alt="avatar" src={auth.user?.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"} sx={{ width: '10rem', height: '10rem', border: '4px solid white' }} />
-                    <Button className="rounded-full" variant="contained" sx={{ borderRadius: '20px' }} onClick={handleOpenProfileModal}>Edit profile</Button>
+            <section className="px-6 relative">
+                <div className="flex justify-between items-start -mt-16">
+                    <Avatar
+                        className="transform border-4 border-white shadow-lg transition-transform hover:scale-105"
+                        alt="avatar"
+                        src={auth.user?.image || "https://cdn-icons-png.flaticon.com/512/8345/8345328.png"}
+                        sx={{ width: '10rem', height: '10rem' }}
+                    />
+                    <Button
+                        className="mt-4 rounded-full transition-all hover:shadow-md"
+                        variant="contained"
+                        sx={{
+                            borderRadius: '20px',
+                            textTransform: 'none',
+                            px: 3,
+                            py: 1
+                        }}
+                        onClick={handleOpenProfileModal}
+                    >
+                        Edit profile
+                    </Button>
                 </div>
-                <div>
+
+                <div className="mt-4">
                     <div className="flex items-center">
-                        <h1 className="font-bold text-lg">{auth.user?.fullName}</h1>
-                        <img className="ml-2 w-5 h-5" src="https://cdn-icons-png.flaticon.com/512/6364/6364343.png" alt="content-image" />
+                        <h1 className="font-bold text-2xl">{auth.user?.fullName}</h1>
+                        <img className="ml-2 w-5 h-5" src="https://cdn-icons-png.flaticon.com/512/6364/6364343.png" alt="verified" />
                     </div>
-                    <h1 className="text-gray-500">@{auth.user?.fullName ? auth.user.fullName.split(' ').join('_').toLowerCase() : 'unknown_user'}</h1>
+                    <h1 className="text-gray-500 text-lg">@{auth.user?.fullName ? auth.user.fullName.split(' ').join('_').toLowerCase() : 'unknown_user'}</h1>
                 </div>
-                <div className="mt-2 space-y-3">
-                    <p>{auth.user?.bio}</p>
-                    <div className="py-1 flex space-x-5">
-                        <div className="flex items-center"><BusinessCenterIcon /><p className="ml-2">Education</p></div>
-                        <div className="flex items-center"><LocationOnIcon /><p className="ml-2">{auth.user?.location}</p></div>
-                        <div className="flex items-center"><CalendarMonthIcon /><p className="ml-2">{auth.user?.birthDate}</p></div>
-                    </div>
-                    <div className="flex items-center space-x-5">
-                        <div className="flex items-center space-x-1 font-semibold">
-                            <span>{auth.user?.following?.length || 0}</span>
-                            <span className="text-gray-500 cursor-pointer" onClick={handleOpenFollowingModal}>Followings</span>
+
+                <div className="mt-4 space-y-4">
+                    <p className="text-gray-700 text-lg">{auth.user?.bio}</p>
+                    <div className="py-2 flex flex-wrap gap-6">
+                        <div className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                            <BusinessCenterIcon className="mr-2" />
+                            <p>Education</p>
                         </div>
-                        <div className="flex items-center space-x-1 font-semibold">
-                            <span>{auth.user?.followers?.length || 0}</span>
+                        <div className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                            <LocationOnIcon className="mr-2" />
+                            <p>{auth.user?.location}</p>
+                        </div>
+                        <div className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                            <CalendarMonthIcon className="mr-2" />
+                            <p>{auth.user?.birthDate}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-8">
+                        <div className="flex items-center space-x-2 font-semibold">
+                            <span className="text-lg">{auth.user?.following?.length || 0}</span>
                             <span
-                                className="text-gray-500 cursor-pointer hover:text-blue-500"
+                                className="text-gray-500 cursor-pointer hover:text-blue-500 transition-colors"
+                                onClick={handleOpenFollowingModal}
+                            >
+                                Following
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-2 font-semibold">
+                            <span className="text-lg">{auth.user?.followers?.length || 0}</span>
+                            <span
+                                className="text-gray-500 cursor-pointer hover:text-blue-500 transition-colors"
                                 onClick={handleOpenFollowersModal}
                             >
                                 Followers
@@ -210,31 +250,91 @@ const Account: React.FC = () => {
                 </div>
             </section>
 
-            <section>
-                <Box className="mt-4" sx={{ width: '100%', typography: 'body1' }}>
+            <section className="mt-6">
+                <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <TabContext value={tabValue}>
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                            <TabList onChange={handleTabChange} aria-label="lab API tabs example">
-                                <Tab label="Post" value="1" />
-                                <Tab label="Image" value="2" />
+                        <Box sx={{ width: '100%' }}>
+                            <TabList
+                                onChange={handleTabChange}
+                                aria-label="profile tabs"
+                                sx={{
+                                    '& .MuiTab-root': {
+                                        textTransform: 'none',
+                                        fontSize: '1rem',
+                                        fontWeight: 500,
+                                        minWidth: 100,
+                                        '&.Mui-selected': {
+                                            color: 'primary.main',
+                                        },
+                                    },
+                                }}
+                            >
+                                <Tab label="Posts" value="1" />
+                                <Tab label="Images" value="2" />
                                 <Tab label="Saved" value="3" />
                             </TabList>
                         </Box>
-                        <TabPanel value="1">
-                            {post.posts?.length > 0 ? post.posts.map(post => <div key={post.id} className="w-[800px] mx-auto"><PostCard post={post} /></div>) : <p className="text-gray-500">No posts available.</p>}
-                        </TabPanel>
-                        <TabPanel value="2">
+                        <TabPanel value="1" sx={{ p: 3 }}>
                             {post.posts?.length > 0 ? (
-                                <div className="flex flex-wrap gap-4">
-                                    {post.posts.map((post, index) => post.image && <img key={index} src={post.image} alt={`Post ${index}`} className="w-32 h-32 object-cover" onClick={() => handleOpenPostModal(post)} />)}
+                                <div className="space-y-4">
+                                    {post.posts.map(post => (
+                                        <div key={post.id} className="w-full">
+                                            <PostCard post={post} />
+                                        </div>
+                                    ))}
                                 </div>
-                            ) : <p className="text-gray-500">No images available.</p>}
+                            ) : (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography color="text.secondary">
+                                        No posts available.
+                                    </Typography>
+                                </Box>
+                            )}
                         </TabPanel>
-                        <TabPanel value="3">
-                            {rePosts.length > 0 ? rePosts.map(post => <div key={post.id} className="w-[800px] mx-auto"><PostCard post={post} /></div>) : <p className="text-gray-500">No posts available.</p>}
+                        <TabPanel value="2" sx={{ p: 3 }}>
+                            {post.posts?.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {post.posts.map((post, index) => post.image && (
+                                        <div
+                                            key={index}
+                                            className="relative aspect-square cursor-pointer group"
+                                            onClick={() => handleOpenPostModal(post)}
+                                        >
+                                            <img
+                                                src={post.image}
+                                                alt={`Post ${index}`}
+                                                className="w-full h-full object-cover rounded-lg transition-transform group-hover:scale-105"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography color="text.secondary">
+                                        No images available.
+                                    </Typography>
+                                </Box>
+                            )}
+                        </TabPanel>
+                        <TabPanel value="3" sx={{ p: 3 }}>
+                            {rePosts.length > 0 ? (
+                                <div className="space-y-4">
+                                    {rePosts.map(post => (
+                                        <div key={post.id} className="w-full">
+                                            <PostCard post={post} />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography color="text.secondary">
+                                        No saved posts available.
+                                    </Typography>
+                                </Box>
+                            )}
                         </TabPanel>
                     </TabContext>
-                </Box>
+                </Paper>
             </section>
 
             <Dialog open={openProfileModal} onClose={handleCloseProfileModal} maxWidth="sm" fullWidth>

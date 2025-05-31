@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { loginUser, registerUser } from "../../Store/Auth/Action";
 import GoogleLogin from "./GoogleLogin";
+import FacebookLogin from "./FacebookLogin";
 import { postLoginToken } from "../../api/postLoginToken";
 
 function Authentication() {
@@ -159,7 +160,10 @@ function Authentication() {
                         </Fade>
                     ) : (
                         <>
-                            <GoogleLogin onGoogleSignIn={onGoogleSignIn} text="Đăng nhập bằng google" />
+                            <div className="flex gap-4 justify-center">
+                                <GoogleLogin onGoogleSignIn={onGoogleSignIn} text="Đăng nhập bằng google" />
+                                <FacebookLogin />
+                            </div>
                             <Divider sx={{ my: 3, color: "#666" }}>HOẶC</Divider>
 
                             {error && (

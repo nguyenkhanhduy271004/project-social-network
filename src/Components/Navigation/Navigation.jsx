@@ -92,7 +92,7 @@ function Navigation() {
                 </div>
             </div>
 
-            <div className='flex items-center justify-between ' style={{ marginTop: '160px' }}>
+            <div className='flex items-center justify-between ' style={{ marginTop: '120px' }}>
                 <div className='flex items-center space-x-3'>
                     <Avatar
                         alt={auth.user.fullName || 'User'}

@@ -54,11 +54,13 @@ export default function GoogleLogin({
     }, []);
 
     return (
-        <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center items-center" style={{ marginLeft: '40px' }}>
             <div
                 ref={googleSignInButton}
-                className="relative inline-block w-[250px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-            ></div>
+                className="flex justify-center items-center w-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            >
+                <div className="w-[250px]"></div>
+            </div>
         </div>
     );
 }
